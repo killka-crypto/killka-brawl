@@ -25,49 +25,49 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:1/1;background:#579b55;
 .knob{width:42px;height:42px;border-radius:50%;background:#d9e2ffbb;border:2px solid white;position:absolute;left:33px;top:33px;pointer-events:none}
 .status{text-align:center;min-height:24px;color:#ffe17c;font-size:13px;font-weight:800}
 .bar{height:9px;border-radius:9px;background:#111a35;overflow:hidden}.bar>div{height:100%;background:#65dc77;width:100%}
-.reward{padding:8px;border-radius:8px;background:#2b3965;flex:1;min-width:100px}
-#field{max-height:75vh}
+.reward{padding:8px;border-radius:8px;background:#2b3965;flex:1;min-width:100px}#field{max-height:75vh}
 @media(max-width:380px){#app{padding:8px}.stick{width:100px;height:100px}.knob{left:27px;top:27px}}
 </style>
 </head>
 <body>
 <div id="app">
-  <div class="top"><div><span class="gold">KILLKA</span> BRAWL</div><div>🪙 <span id="coins">100</span>　🏆 <span id="trophies">0</span></div></div>
-
-  <section id="home" class="screen">
-    <div class="panel" style="text-align:center"><div style="font-size:28px;font-weight:950" class="gold">⚔️ BRAWL ARENA</div><div class="small">Выбери бойца и отправляйся на арену!</div></div>
-    <div class="panel"><h2>Выбор бойца</h2><div id="fighters" class="row"></div><div id="fighterInfo" class="small" style="margin-top:8px"></div><button id="play" class="active" style="width:100%;margin-top:12px">▶ ИГРАТЬ</button></div>
-    <div class="row"><button id="shop" style="flex:1">🛒 МАГАЗИН</button><button id="road" style="flex:1">🏆 ДОРОГА СЛАВЫ</button><button id="boxes" style="flex:1">🎁 ЯЩИКИ</button></div>
-    <div class="panel"><div class="gold" style="font-weight:bold">Твои достижения</div><div class="small">Прогресс сохраняется на этом устройстве.</div><div class="bar" style="margin-top:8px"><div id="progress"></div></div><div class="small" id="progressText" style="margin-top:5px"></div></div>
-  </section>
-
-  <section id="arenaScreen" class="screen hidden">
-    <div class="arenahead"><span id="arenaName">АРЕНА</span><span>Осталось: <b id="left">10</b>/10</span><span>❤️ <b id="hp">100</b></span></div>
-    <div class="bar"><div id="healthbar"></div></div>
-    <canvas id="field" width="600" height="600"></canvas>
-    <div class="row" style="justify-content:space-between;font-size:14px;font-weight:bold"><span>🔫 Патроны: <b id="ammo">3/3</b></span><span id="reloadLabel" class="gold">Готов к бою</span></div>
-    <div class="bar"><div id="reloadbar" style="width:0%"></div></div>
-    <div class="status" id="status">Левый джойстик — движение. Правый — прицел и выстрел.</div>
-    <div class="controls">
-      <div style="text-align:center"><div class="stick" id="moveStick"><div class="knob" id="moveKnob"></div></div><div class="small" style="margin-top:5px">ДВИЖЕНИЕ</div></div>
-      <div style="text-align:center"><div class="stick" id="aimStick"><div class="knob" id="aimKnob"></div></div><div class="small" style="margin-top:5px">ПРИЦЕЛ / ОГОНЬ</div></div>
-    </div>
-    <button id="back" style="width:100%">В МЕНЮ</button>
-  </section>
-
-  <section id="shopScreen" class="screen hidden"><h2>🛒 Магазин</h2><div class="panel">Набор монет<br><b class="gold">+100 монет</b> — 50 монет</div><button id="buyCoins">КУПИТЬ НАБОР</button><button class="backHome">← НАЗАД</button></section>
-  <section id="roadScreen" class="screen hidden"><h2>🏆 Дорога славы</h2><div id="roadItems" style="display:flex;flex-direction:column;gap:8px"></div><button class="backHome">← НАЗАД</button></section>
-  <section id="boxScreen" class="screen hidden"><h2>🎁 Ящики</h2><div class="panel" style="text-align:center"><div style="font-size:48px">📦</div><b>Бравл-ящик</b><div class="small">Внутри случайные награды!</div><button id="openBox" class="active" style="margin-top:12px">ОТКРЫТЬ — 30 🪙</button><div id="boxResult" class="gold" style="margin-top:12px;font-weight:bold"></div></div><button class="backHome">← НАЗАД</button></section>
-  <section id="endScreen" class="screen panel" style="text-align:center"><h2 id="endTitle">ПОБЕДА!</h2><div id="endMessage"></div><button id="again" class="active" style="width:100%">ЕЩЁ БОЙ</button><button class="backHome" style="width:100%">В МЕНЮ</button></section>
+<div class="top"><div><span class="gold">KILLKA</span> BRAWL</div><div>🪙 <span id="coins">100</span>　🏆 <span id="trophies">0</span></div></div>
+<section id="home" class="screen">
+<div class="panel" style="text-align:center"><div style="font-size:28px;font-weight:950" class="gold">⚔️ BRAWL ARENA</div><div class="small">Выбери бойца и отправляйся на арену!</div></div>
+<div class="panel"><h2>Выбор бойца</h2><div id="fighters" class="row"></div><div id="fighterInfo" class="small" style="margin-top:8px"></div><button id="play" class="active" style="width:100%;margin-top:12px">▶ ИГРАТЬ</button></div>
+<div class="row"><button id="shop" style="flex:1">🛒 МАГАЗИН</button><button id="road" style="flex:1">🏆 ДОРОГА СЛАВЫ</button><button id="boxes" style="flex:1">🎁 ЯЩИКИ</button></div>
+<div class="panel"><div class="gold" style="font-weight:bold">Твои достижения</div><div class="small">Прогресс сохраняется на этом устройстве.</div><div class="bar" style="margin-top:8px"><div id="progress"></div></div><div class="small" id="progressText" style="margin-top:5px"></div></div>
+</section>
+<section id="arenaScreen" class="screen hidden">
+<div class="arenahead"><span id="arenaName">АРЕНА</span><span>Осталось: <b id="left">10</b>/10</span><span>❤️ <b id="hp">100</b></span></div>
+<div class="bar"><div id="healthbar"></div></div>
+<canvas id="field" width="600" height="600"></canvas>
+<div class="row" style="justify-content:space-between;font-size:14px;font-weight:bold"><span>🔫 Патроны: <b id="ammo">3/3</b></span><span id="reloadLabel" class="gold">Готов к бою</span></div>
+<div class="bar"><div id="reloadbar" style="width:0%"></div></div>
+<div class="status" id="status">Левый джойстик — движение. Правый — прицел и выстрел.</div>
+<div class="controls">
+<div style="text-align:center"><div class="stick" id="moveStick"><div class="knob" id="moveKnob"></div></div><div class="small" style="margin-top:5px">ДВИЖЕНИЕ</div></div>
+<div style="text-align:center"><div class="stick" id="aimStick"><div class="knob" id="aimKnob"></div></div><div class="small" style="margin-top:5px">ПРИЦЕЛ / ОГОНЬ</div></div>
+</div>
+<button id="back" style="width:100%">В МЕНЮ</button>
+</section>
+<section id="shopScreen" class="screen hidden"><h2>🛒 Магазин</h2><div class="panel">Набор монет<br><b class="gold">+100 монет</b> — 50 монет</div><button id="buyCoins">КУПИТЬ НАБОР</button><button class="backHome">← НАЗАД</button></section>
+<section id="roadScreen" class="screen hidden"><h2>🏆 Дорога славы</h2><div id="roadItems" style="display:flex;flex-direction:column;gap:8px"></div><button class="backHome">← НАЗАД</button></section>
+<section id="boxScreen" class="screen hidden"><h2>🎁 Ящики</h2><div class="panel" style="text-align:center"><div style="font-size:48px">📦</div><b>Бравл-ящик</b><div class="small">Внутри случайные награды!</div><button id="openBox" class="active" style="margin-top:12px">ОТКРЫТЬ — 30 🪙</button><div id="boxResult" class="gold" style="margin-top:12px;font-weight:bold"></div></div><button class="backHome">← НАЗАД</button></section>
+<section id="endScreen" class="screen panel" style="text-align:center"><h2 id="endTitle">ПОБЕДА!</h2><div id="endMessage"></div><button id="again" class="active" style="width:100%">ЕЩЁ БОЙ</button><button class="backHome" style="width:100%">В МЕНЮ</button></section>
 </div>
 <script>
 (()=>{
 const $=id=>document.getElementById(id);
 const fighters=[
 {id:'colt',name:'Кольт',emoji:'🤠',hp:100,ammo:3,damage:18,reload:1000,range:230,spread:.10},
-{id:'bull',name:'Булл',emoji:'🐂',hp:160,ammo:2,damage:30,reload:1200,range:115,spread:.65},
-{id:'brock',name:'Брок',emoji:'🚀',hp:90,ammo:1,damage:42,reload:1500,range:260,spread:.08},
-{id:'piper',name:'Пайпер',emoji:'🎀',hp:85,ammo:1,damage:55,reload:1400,range:300,spread:.04}
+{id:'bull',name:'Булл',emoji:'🐂',hp:160,ammo:3,damage:30,reload:1200,range:115,spread:.65},
+{id:'brock',name:'Брок',emoji:'🚀',hp:90,ammo:3,damage:42,reload:1500,range:260,spread:.08},
+{id:'piper',name:'Пайпер',emoji:'🎀',hp:85,ammo:3,damage:55,reload:1400,range:300,spread:.04},
+{id:'shelly',name:'Шелли',emoji:'💜',hp:120,ammo:3,damage:36,reload:1100,range:175,spread:.55},
+{id:'nita',name:'Нита',emoji:'🐻',hp:130,ammo:3,damage:27,reload:1050,range:210,spread:.08},
+{id:'jessie',name:'Джесси',emoji:'🔧',hp:110,ammo:3,damage:24,reload:1150,range:225,spread:.06},
+{id:'primo',name:'Эль Примо',emoji:'🥊',hp:190,ammo:3,damage:34,reload:1300,range:95,spread:.35}
 ];
 let save={coins:100,trophies:0,claimed:[],unlocked:['colt']};
 try{save={...save,...JSON.parse(localStorage.getItem('kbAutoSave')||'{}')}}catch(e){}
@@ -85,7 +85,7 @@ let x=f();$('fighterInfo').textContent=`${x.name}: ❤️ ${x.hp} · 🔫 ${x.am
 function hud(){$('ammo').textContent=ammo+'/'+maxAmmo;$('hp').textContent=Math.max(0,Math.ceil(hp));$('healthbar').style.width=Math.max(0,hp/f().hp*100)+'%';$('left').textContent=enemies.filter(e=>e.hp>0).length}
 function start(){
 chosen=save.unlocked.includes(chosen)?chosen:'colt';running=true;reloading=false;reloadToken++;aiming=false;move={x:0,y:0};
-maxAmmo=f().ammo;ammo=maxAmmo;hp=f().hp;player={x:300,y:300};shots=[];enemyShots=[];
+maxAmmo=3;ammo=maxAmmo;hp=f().hp;player={x:300,y:300};shots=[];enemyShots=[];
 enemies=Array.from({length:10},(_,i)=>{let a=i*Math.PI*2/10;return{x:300+Math.cos(a)*220,y:300+Math.sin(a)*220,hp:55,max:55,cd:Math.random()*80}});
 $('arenaName').textContent='АРЕНА — '+f().name;$('status').textContent='Двигайся левым джойстиком. Направляй правым и отпускай для выстрела.';
 $('reloadLabel').textContent='Готов к бою';$('reloadbar').style.width='0%';hud();show('arenaScreen');last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
@@ -99,8 +99,8 @@ requestAnimationFrame(tick);
 }
 function shoot(){
 if(!running)return;if(reloading){$('status').textContent='Идёт автоматическая перезарядка…';return}if(ammo<=0){reload();return}
-ammo--;let x=f(),a=Math.atan2(aim.y,aim.x),n=x.id==='colt'?3:1;
-for(let i=0;i<n;i++){let angle=a+(i-(n-1)/2)*x.spread;shots.push({x:player.x,y:player.y,vx:Math.cos(angle)*8,vy:Math.sin(angle)*8,life:x.range/8,damage:x.damage/n,r:x.id==='bull'?9:5,blast:x.id==='brock'?34:0})}
+ammo--;let x=f(),a=Math.atan2(aim.y,aim.x),n=x.id==='colt'?3:x.id==='shelly'?6:1;
+for(let i=0;i<n;i++){let angle=a+(i-(n-1)/2)*x.spread;shots.push({x:player.x,y:player.y,vx:Math.cos(angle)*8,vy:Math.sin(angle)*8,life:x.range/8,damage:x.damage/n,r:x.id==='bull'||x.id==='shelly'?9:5,blast:x.id==='brock'?34:0, pierce:x.id==='jessie'})}
 hud();$('status').textContent='Выстрел!';if(ammo===0)reload();
 }
 const canvas=$('field'),ctx=canvas.getContext('2d');
@@ -113,11 +113,11 @@ for(let x=0;x<600;x+=60){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,600);ctx.s
 for(let x of [95,505])for(let y of [120,480]){ctx.fillStyle='#397b42';ctx.fillRect(x-20,y-20,40,40)}
 let alive=enemies.filter(e=>e.hp>0);
 for(let e of alive){let dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1;e.x+=dx/d*.48*dt;e.y+=dy/d*.48*dt;e.cd-=dt;if(d<230&&e.cd<=0){enemyShots.push({x:e.x,y:e.y,vx:dx/d*3,vy:dy/d*3,life:75});e.cd=95+Math.random()*35}circle(e.x,e.y,15,'#b83d45');circle(e.x,e.y-3,7,'#ffcfaa');ctx.fillStyle='#18233b';ctx.fillRect(e.x-16,e.y-25,32,4);ctx.fillStyle='#6be17b';ctx.fillRect(e.x-16,e.y-25,32*e.hp/e.max,4)}
-for(let s of shots){s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;for(let e of alive)if(Math.hypot(e.x-s.x,e.y-s.y)<(s.blast?34:18)){e.hp-=s.damage;s.life=0;if(s.blast){for(let other of alive)if(other!==e&&Math.hypot(other.x-s.x,other.y-s.y)<s.blast)other.hp-=s.damage*.55}break}circle(s.x,s.y,s.r,'#ffe16b')}
+for(let s of shots){s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;for(let e of alive)if(Math.hypot(e.x-s.x,e.y-s.y)<(s.blast?34:18)){e.hp-=s.damage;if(!s.pierce)s.life=0;if(s.blast){for(let other of alive)if(other!==e&&Math.hypot(other.x-s.x,other.y-s.y)<s.blast)other.hp-=s.damage*.55}if(!s.pierce)break}circle(s.x,s.y,s.r,'#ffe16b')}
 shots=shots.filter(s=>s.life>0);
 for(let s of enemyShots){s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;if(Math.hypot(s.x-player.x,s.y-player.y)<18){hp-=.25*dt*4;s.life=0}circle(s.x,s.y,5,'#ff9b72')}
 enemyShots=enemyShots.filter(s=>s.life>0);
-if(aiming){let a=Math.atan2(aim.y,aim.x);ctx.save();ctx.translate(player.x,player.y);ctx.rotate(a);ctx.fillStyle='#ffffff30';ctx.beginPath();if(f().id==='bull'){ctx.moveTo(0,0);ctx.arc(0,0,f().range,-f().spread,f().spread);ctx.closePath()}else{ctx.moveTo(0,-14);ctx.lineTo(f().range,-f().range*.1);ctx.lineTo(f().range,f().range*.1);ctx.lineTo(0,14);ctx.closePath()}ctx.fill();ctx.restore()}
+if(aiming){let a=Math.atan2(aim.y,aim.x);ctx.save();ctx.translate(player.x,player.y);ctx.rotate(a);ctx.fillStyle='#ffffff30';ctx.beginPath();if(f().id==='bull'||f().id==='shelly'){ctx.moveTo(0,0);ctx.arc(0,0,f().range,-f().spread,f().spread);ctx.closePath()}else{ctx.moveTo(0,-14);ctx.lineTo(f().range,-f().range*.1);ctx.lineTo(f().range,f().range*.1);ctx.lineTo(0,14);ctx.closePath()}ctx.fill();ctx.restore()}
 circle(player.x,player.y,17,'#2878e8');circle(player.x+aim.x*10,player.y+aim.y*10,6,'#ffe18a');hud();
 if(hp<=0){finish(false);return}if(!enemies.some(e=>e.hp>0)){finish(true);return}raf=requestAnimationFrame(loop);
 }
