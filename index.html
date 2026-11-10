@@ -67,7 +67,11 @@ const fighters=[
 {id:'shelly',name:'Шелли',emoji:'💜',hp:120,ammo:3,damage:36,reload:1100,range:175,spread:.55},
 {id:'nita',name:'Нита',emoji:'🐻',hp:130,ammo:3,damage:27,reload:1050,range:210,spread:.08},
 {id:'jessie',name:'Джесси',emoji:'🔧',hp:110,ammo:3,damage:24,reload:1150,range:225,spread:.06},
-{id:'primo',name:'Эль Примо',emoji:'🥊',hp:190,ammo:3,damage:34,reload:1300,range:95,spread:.35}
+{id:'primo',name:'Эль Примо',emoji:'🥊',hp:190,ammo:3,damage:34,reload:1300,range:95,spread:.35},
+{id:'dynamike',name:'Динамайк',emoji:'💣',hp:100,ammo:3,damage:48,reload:1400,range:220,spread:.12,attack:'lob'},
+{id:'bo',name:'Бо',emoji:'🏹',hp:125,ammo:3,damage:20,reload:1200,range:230,spread:.28,attack:'triple'},
+{id:'poco',name:'Поко',emoji:'🎸',hp:115,ammo:3,damage:26,reload:1250,range:185,spread:.48,attack:'wave'},
+{id:'darryl',name:'Дэррил',emoji:'🛢️',hp:150,ammo:3,damage:32,reload:1300,range:165,spread:.58,attack:'double'}
 ];
 let save={coins:100,trophies:0,claimed:[],unlocked:['colt']};
 try{save={...save,...JSON.parse(localStorage.getItem('kbAutoSave')||'{}')}}catch(e){}
@@ -100,7 +104,14 @@ requestAnimationFrame(tick);
 function shoot(){
 if(!running)return;if(reloading){$('status').textContent='Идёт автоматическая перезарядка…';return}if(ammo<=0){reload();return}
 ammo--;let x=f(),a=Math.atan2(aim.y,aim.x),n=x.id==='colt'?3:x.id==='shelly'?6:1;
-for(let i=0;i<n;i++){let angle=a+(i-(n-1)/2)*x.spread;shots.push({x:player.x,y:player.y,vx:Math.cos(angle)*8,vy:Math.sin(angle)*8,life:x.range/8,damage:x.damage/n,r:x.id==='bull'||x.id==='shelly'?9:5,blast:x.id==='brock'?34:0, pierce:x.id==='jessie'})}
+if(x.id==='dynamike'){
+ shots.push({x:player.x,y:player.y,vx:Math.cos(a)*5,vy:Math.sin(a)*5,life:x.range/5,damage:x.damage,r:8,blast:58,lob:true});
+}else if(x.id==='poco'){
+ shots.push({x:player.x,y:player.y,vx:Math.cos(a)*7,vy:Math.sin(a)*7,life:x.range/7,damage:x.damage,r:15,wave:true,pierce:true});
+}else{
+ let count=x.id==='bo'?3:x.id==='darryl'?8:n;
+ for(let i=0;i<count;i++){let angle=a+(i-(count-1)/2)*(x.id==='darryl'?.16:x.spread);shots.push({x:player.x,y:player.y,vx:Math.cos(angle)*(x.id==='bo'?9:8),vy:Math.sin(angle)*(x.id==='bo'?9:8),life:x.range/8,damage:x.damage/count,r:x.id==='bull'||x.id==='shelly'||x.id==='darryl'?8:5,blast:x.id==='brock'?34:0,pierce:x.id==='jessie'})}
+ }
 hud();$('status').textContent='Выстрел!';if(ammo===0)reload();
 }
 const canvas=$('field'),ctx=canvas.getContext('2d');
@@ -113,11 +124,18 @@ for(let x=0;x<600;x+=60){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,600);ctx.s
 for(let x of [95,505])for(let y of [120,480]){ctx.fillStyle='#397b42';ctx.fillRect(x-20,y-20,40,40)}
 let alive=enemies.filter(e=>e.hp>0);
 for(let e of alive){let dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1;e.x+=dx/d*.48*dt;e.y+=dy/d*.48*dt;e.cd-=dt;if(d<230&&e.cd<=0){enemyShots.push({x:e.x,y:e.y,vx:dx/d*3,vy:dy/d*3,life:75});e.cd=95+Math.random()*35}circle(e.x,e.y,15,'#b83d45');circle(e.x,e.y-3,7,'#ffcfaa');ctx.fillStyle='#18233b';ctx.fillRect(e.x-16,e.y-25,32,4);ctx.fillStyle='#6be17b';ctx.fillRect(e.x-16,e.y-25,32*e.hp/e.max,4)}
-for(let s of shots){s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;for(let e of alive)if(Math.hypot(e.x-s.x,e.y-s.y)<(s.blast?34:18)){e.hp-=s.damage;if(!s.pierce)s.life=0;if(s.blast){for(let other of alive)if(other!==e&&Math.hypot(other.x-s.x,other.y-s.y)<s.blast)other.hp-=s.damage*.55}if(!s.pierce)break}circle(s.x,s.y,s.r,'#ffe16b')}
+for(let s of shots){s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;
+ if(s.lob&&s.life<2){s.vx*=.94;s.vy*=.94}
+ for(let e of alive)if(Math.hypot(e.x-s.x,e.y-s.y)<(s.blast?34: s.wave?27:18)){e.hp-=s.damage;if(!s.pierce)s.life=0;if(s.blast){for(let other of alive)if(other!==e&&Math.hypot(other.x-s.x,other.y-s.y)<s.blast)other.hp-=s.damage*.55}if(!s.pierce)break}
+ circle(s.x,s.y,s.r,s.wave?'#f2a9ff':s.lob?'#ffb34d':'#ffe16b')
+ }
 shots=shots.filter(s=>s.life>0);
 for(let s of enemyShots){s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;if(Math.hypot(s.x-player.x,s.y-player.y)<18){hp-=.25*dt*4;s.life=0}circle(s.x,s.y,5,'#ff9b72')}
 enemyShots=enemyShots.filter(s=>s.life>0);
-if(aiming){let a=Math.atan2(aim.y,aim.x);ctx.save();ctx.translate(player.x,player.y);ctx.rotate(a);ctx.fillStyle='#ffffff30';ctx.beginPath();if(f().id==='bull'||f().id==='shelly'){ctx.moveTo(0,0);ctx.arc(0,0,f().range,-f().spread,f().spread);ctx.closePath()}else{ctx.moveTo(0,-14);ctx.lineTo(f().range,-f().range*.1);ctx.lineTo(f().range,f().range*.1);ctx.lineTo(0,14);ctx.closePath()}ctx.fill();ctx.restore()}
+if(aiming){let a=Math.atan2(aim.y,aim.x);ctx.save();ctx.translate(player.x,player.y);ctx.rotate(a);ctx.fillStyle='#ffffff30';ctx.beginPath();if(['bull','shelly','poco','darryl'].includes(f().id)){let spread=f().id==='poco'?.48:f().id==='darryl'?.58:f().spread;ctx.moveTo(0,0);ctx.arc(0,0,f().range,-spread,spread);ctx.closePath()}
+ else if(f().id==='dynamike'){ctx.setLineDash([8,6]);ctx.beginPath();ctx.arc(f().range*.78,0,58,0,Math.PI*2);ctx.strokeStyle='#ffd16b';ctx.lineWidth=3;ctx.stroke();ctx.setLineDash([]);ctx.moveTo(0,0);ctx.quadraticCurveTo(f().range*.55,-70,f().range*.78,0);ctx.lineTo(0,0)}
+ else if(f().id==='bo'){for(let k=-1;k<=1;k++){ctx.beginPath();ctx.moveTo(0,k*5);ctx.lineTo(f().range,k* f().range*.28);ctx.strokeStyle='#fff1a8';ctx.lineWidth=3;ctx.stroke()}}
+ else{ctx.moveTo(0,-14);ctx.lineTo(f().range,-f().range*.1);ctx.lineTo(f().range,f().range*.1);ctx.lineTo(0,14);ctx.closePath()}ctx.fill();ctx.restore()}
 circle(player.x,player.y,17,'#2878e8');circle(player.x+aim.x*10,player.y+aim.y*10,6,'#ffe18a');hud();
 if(hp<=0){finish(false);return}if(!enemies.some(e=>e.hp>0)){finish(true);return}raf=requestAnimationFrame(loop);
 }
