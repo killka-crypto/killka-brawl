@@ -31,13 +31,7 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:1/1;background:#579b55;
 <div class="top"><div><span class="gold">KILLKA</span> BRAWL</div><div>🪙 <span id="coins">100</span>　🏆 <span id="trophies">0</span></div></div>
 <section id="home" class="screen">
 <div class="panel" style="text-align:center"><div style="font-size:28px;font-weight:950" class="gold">⚔️ BRAWL ARENA</div><div class="small">Выбери режим и бойца!</div></div>
-<div class="panel" style="text-align:center"><h2>Готов к битве?</h2><div class="small">Нажми «Бой», чтобы выбрать режим игры.</div><button id="chooseFighter" class="active" style="width:100%;margin-top:12px;font-size:20px;padding:16px">⚔️ БОЙ</button></div>
-<div class="row"><button id="shop" style="flex:1">🛒 МАГАЗИН</button><button id="road" style="flex:1">🏆 ДОРОГА СЛАВЫ</button><button id="boxes" style="flex:1">🎁 ЯЩИКИ</button><button id="upgrades" style="flex:1">⚡ ПРОКАЧКА</button></div>
-<div class="panel" id="rankPanel"><div class="gold" style="font-weight:bold">🏅 Ранговый путь</div><div id="rankInfo" style="font-weight:900;margin-top:6px">Бронза I · 0 очков</div><div class="bar" style="margin:8px 0"><div id="rankProgress" style="width:0%;background:#c58cff"></div></div><div class="small">Победа в ранговом бою: +25 очков · Поражение: −10 очков</div></div>
-<div class="panel"><div class="gold" style="font-weight:bold">Твои достижения</div><div class="bar" style="margin-top:8px"><div id="progress"></div></div><div class="small" id="progressText"></div></div>
-</section>
-<section id="modeSelectScreen" class="screen hidden">
-<h2>🎮 Выбери режим игры</h2>
+<div class="panel"><h2>🎮 Выбери режим игры</h2>
 <div class="row" id="modeChoices">
 <button class="mode active" data-mode="showdown"><span>☠️</span><b>СТОЛКНОВЕНИЕ</b><small>Каждый сам за себя</small></button>
 <button class="mode" data-mode="knockout"><span>💥</span><b>НОКАУТ</b><small>Командный бой</small></button>
@@ -45,9 +39,12 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:1/1;background:#579b55;
 <button class="mode" data-mode="gems"><span>💎</span><b>ЗАХВАТ КРИСТАЛЛОВ</b><small>Собери кристаллы</small></button>
 <button class="mode" data-mode="ranked"><span>🏅</span><b>РАНГОВЫЙ БОЙ</b><small>Случайный режим: Нокаут, Ограбление или Захват кристаллов</small></button>
 </div>
-<button id="playSelectedMode" class="active" style="width:100%;font-size:18px">ИГРАТЬ</button>
-<button id="cancelModeSelect" style="width:100%">← В МЕНЮ</button>
+<button id="playSelectedMode" class="active" style="width:100%;font-size:20px;padding:15px">⚔️ ИГРАТЬ</button></div>
+<div class="row"><button id="shop" style="flex:1">🛒 МАГАЗИН</button><button id="road" style="flex:1">🏆 ДОРОГА СЛАВЫ</button><button id="boxes" style="flex:1">🎁 ЯЩИКИ</button><button id="upgrades" style="flex:1">⚡ ПРОКАЧКА</button></div>
+<div class="panel" id="rankPanel"><div class="gold" style="font-weight:bold">🏅 Ранговый путь</div><div id="rankInfo" style="font-weight:900;margin-top:6px">Бронза I · 0 очков</div><div class="bar" style="margin:8px 0"><div id="rankProgress" style="width:0%;background:#c58cff"></div></div><div class="small">Победа в ранговом бою: +25 очков · Поражение: −10 очков</div></div>
+<div class="panel"><div class="gold" style="font-weight:bold">Твои достижения</div><div class="bar" style="margin-top:8px"><div id="progress"></div></div><div class="small" id="progressText"></div></div>
 </section>
+
 <section id="modeRevealScreen" class="screen hidden">
 <div class="panel" style="text-align:center;padding:28px 14px"><div class="small">СЛУЧАЙНЫЙ ВЫБОР РЕЖИМА</div><div id="modeRevealIcon" style="font-size:64px;margin:18px 0">🎲</div><h2 id="modeRevealName">Выбираем режим...</h2><div id="modeRevealGoal" class="small">Сейчас начнётся выбор режима</div></div>
 <button id="continueToFighters" class="active" style="width:100%" disabled>ВЫБРАТЬ БОЙЦА</button>
@@ -132,9 +129,9 @@ const f=()=>{const base=fighters.find(x=>x.id===chosen)||fighters[0];const level
 function persist(){localStorage.setItem('kbAutoSave',JSON.stringify(save));refresh()}
 function rankDetails(){const pts=Math.max(0,Number(save.rankPoints)||0);const tiers=[['Бронза I',0],['Бронза II',50],['Бронза III',100],['Серебро I',150],['Серебро II',200],['Серебро III',250],['Золото I',300],['Золото II',375],['Золото III',450],['Алмаз I',525],['Алмаз II',625],['Алмаз III',725],['Мифический',850],['Легендарный',1000]];let idx=0;for(let i=0;i<tiers.length;i++)if(pts>=tiers[i][1])idx=i;const next=tiers[idx+1];return {name:tiers[idx][0],points:pts,progress:next?Math.max(0,Math.min(100,(pts-tiers[idx][1])/(next[1]-tiers[idx][1])*100)):100,next:next?next[1]:null}}
 function refresh(){ $('coins').textContent=save.coins;$('trophies').textContent=save.trophies;$('progress').style.width=Math.min(100,save.trophies/500*100)+'%';$('progressText').textContent=save.trophies+' / 500 кубков';const r=rankDetails();$('rankInfo').textContent=r.name+' · '+r.points+' очков';$('rankProgress').style.width=r.progress+'%'}
-function show(id){['home','modeSelectScreen','modeRevealScreen','fighterSelectScreen','countdownScreen','arenaScreen','shopScreen','upgradeScreen','roadScreen','boxScreen','endScreen'].forEach(x=>$(x).classList.add('hidden'));$(id).classList.remove('hidden')}
+function show(id){['home','modeRevealScreen','fighterSelectScreen','countdownScreen','arenaScreen','shopScreen','upgradeScreen','roadScreen','boxScreen','endScreen'].forEach(x=>$(x).classList.add('hidden'));$(id).classList.remove('hidden')}
 function renderFighters(){$('fighters').innerHTML=fighters.map(x=>`<button class="fighter ${chosen===x.id?'active':''}" data-f="${x.id}"><span class="face">${x.emoji}</span><b>${x.name}</b><div class="small">${save.unlocked.includes(x.id)?'Доступен':'🔒 Закрыт'}</div></button>`).join('');document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{let id=b.dataset.f;if(!save.unlocked.includes(id)){$('fighterInfo').textContent='Этот боец пока заблокирован.';return}chosen=id;renderFighters()});let x=f();$('fighterInfo').textContent=`${x.name}: ❤️ ${x.hp} · 🔫 3 патр. · Урон ${x.damage}`}
-function openModeSelect(){selectedMode='showdown';document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===selectedMode));show('modeSelectScreen')}
+function openModeSelect(){show('home')}
 function playSelectedMode(){
   rankedRun=selectedMode==='ranked';
   if(rankedRun){
@@ -349,7 +346,7 @@ function pad(stick,knob,type){let active=false,id=null;function update(e){let r=
 function end(){if(!active)return;active=false;try{stick.releasePointerCapture(id)}catch(e){}knob.style.transform='';if(type==='move')move={x:0,y:0};else{aiming=false;if(running)shoot()}}
 stick.addEventListener('pointerdown',e=>{if(!running)return;active=true;id=e.pointerId;stick.setPointerCapture(id);update(e)});stick.addEventListener('pointermove',e=>{if(active)update(e)});stick.addEventListener('pointerup',end);stick.addEventListener('pointercancel',end)}
 pad($('moveStick'),$('moveKnob'),'move');pad($('aimStick'),$('aimKnob'),'aim');
-$('chooseFighter').onclick=openModeSelect;document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{selectedMode=b.dataset.mode;document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('active',x===b))});$('playSelectedMode').onclick=playSelectedMode;$('cancelModeSelect').onclick=()=>show('home');$('continueToFighters').onclick=()=>{if(rankedRun)beginRankedCountdown();else{renderFighters();$('fighterCountdown').style.display='none';show('fighterSelectScreen')}};$('cancelModeReveal').onclick=()=>show('modeSelectScreen');$('startFight').onclick=()=>{if(countdownTimer)clearInterval(countdownTimer);countdownTimer=null;$('fighterCountdown').style.display='none';start()};$('cancelCountdown').onclick=()=>{if(countdownTimer)clearInterval(countdownTimer);countdownTimer=null;show('fighterSelectScreen')};$('backToModes').onclick=()=>show('modeSelectScreen');$('again').onclick=openModeSelect;$('back').onclick=()=>{running=false;reloading=false;reloadToken++;move={x:0,y:0};renderFighters();show('home')};document.querySelectorAll('.backHome').forEach(b=>b.onclick=()=>show('home'));
+document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{selectedMode=b.dataset.mode;document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('active',x===b))});$('playSelectedMode').onclick=playSelectedMode;$('continueToFighters').onclick=()=>{if(rankedRun)beginRankedCountdown();else{renderFighters();$('fighterCountdown').style.display='none';show('fighterSelectScreen')}};$('cancelModeReveal').onclick=()=>show('home');$('startFight').onclick=()=>{if(countdownTimer)clearInterval(countdownTimer);countdownTimer=null;$('fighterCountdown').style.display='none';start()};$('cancelCountdown').onclick=()=>{if(countdownTimer)clearInterval(countdownTimer);countdownTimer=null;show('fighterSelectScreen')};$('backToModes').onclick=()=>show('home');$('again').onclick=openModeSelect;$('back').onclick=()=>{running=false;reloading=false;reloadToken++;move={x:0,y:0};renderFighters();show('home')};document.querySelectorAll('.backHome').forEach(b=>b.onclick=()=>show('home'));
 $('shop').onclick=()=>show('shopScreen');$('road').onclick=()=>{drawRoad();show('roadScreen')};$('boxes').onclick=()=>show('boxScreen');
 
 function buyWithCoins(cost, reward, messageId){
