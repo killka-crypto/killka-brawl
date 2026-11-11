@@ -182,7 +182,7 @@ if(s.explosive){
   }else circle(s.x,s.y,s.r,'#ffe16b');
   continue;
 }
-for(let e of alive)if(Math.hypot(e.x-s.x,e.y-s.y)<20){e.hp-=s.damage;if(s.poison){e.poisonUntil=performance.now()+1800;e.poisonDps=Math.max(1,s.damage*.18)}if(!s.pierce)s.life=0;if(mode==='heist'&&Math.hypot(512-s.x,300-s.y)<65)safeHP-=s.damage;if(!s.pierce)break}
+for(let e of alive)if(Math.hypot(e.x-s.x,e.y-s.y)<20){e.hp-=s.damage;if(s.poison){e.poisonUntil=performance.now()+400;e.poisonDps=Math.max(1,s.damage*.18)}if(!s.pierce)s.life=0;if(mode==='heist'&&Math.hypot(512-s.x,300-s.y)<65)safeHP-=s.damage;if(!s.pierce)break}
 if(mode==='heist'&&Math.hypot(512-s.x,300-s.y)<55){safeHP-=s.damage;s.life=0}
 circle(s.x,s.y,s.r,'#ffe16b')
 }
