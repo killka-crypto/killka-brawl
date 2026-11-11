@@ -118,11 +118,22 @@ const fighters=[
 {id:'jacky',name:'Джеки',emoji:'🦺',hp:175,damage:42,reload:1400,range:95,spread:.0},
 {id:'mortis',name:'Мортис',emoji:'🦇',hp:140,damage:48,reload:1300,range:145,spread:.0},
 {id:'brali',name:'Брали',emoji:'🌀',hp:125,damage:35,reload:1200,range:220,spread:.55},
-{id:'crow',name:'Ворон',emoji:'🐦‍⬛',hp:100,damage:42,reload:1250,range:245,spread:.28}
+{id:'crow',name:'Ворон',emoji:'🐦‍⬛',hp:100,damage:42,reload:1250,range:245,spread:.28},
+{id:'spike',name:'Спайк',emoji:'🌵',hp:105,damage:38,reload:1350,range:220,spread:.42},
+{id:'leon',name:'Леон',emoji:'🦎',hp:115,damage:36,reload:1100,range:230,spread:.30},
+{id:'emz',name:'Эмз',emoji:'💨',hp:120,damage:30,reload:1250,range:190,spread:.24},
+{id:'sandy',name:'Сэнди',emoji:'💤',hp:130,damage:30,reload:1200,range:205,spread:.42}
 ];
 const modes={gems:{name:'ЗАХВАТ КРИСТАЛЛОВ',goal:'Собери 10 кристаллов',icon:'💎'},knockout:{name:'НОКАУТ',goal:'Победи 3 противников',icon:'💥'},showdown:{name:'СТОЛКНОВЕНИЕ',goal:'Победи 10 противников',icon:'☠️'},heist:{name:'ОГРАБЛЕНИЕ',goal:'Уничтожь сейф врага',icon:'💰'},ranked:{name:'РАНГОВЫЙ БОЙ',goal:'Победи 5 противников',icon:'🏅'}};
 let save={coins:100,trophies:0,rankPoints:0,claimed:[],unlocked:['colt'],upgrades:{}};try{save={...save,...JSON.parse(localStorage.getItem('kbAutoSave')||'{}')}}catch(e){}
 if(!Array.isArray(save.claimed))save.claimed=[];if(!Array.isArray(save.unlocked))save.unlocked=['colt'];if(!save.upgrades||typeof save.upgrades!=='object')save.upgrades={};
+// Перенос прогресса заменённых бойцов: Эдгар -> Леон, Гэйл -> Сэнди.
+if(save.unlocked.includes('edgar')&&!save.unlocked.includes('leon'))save.unlocked.push('leon');
+if(save.unlocked.includes('gale')&&!save.unlocked.includes('sandy'))save.unlocked.push('sandy');
+if(save.upgrades.edgar&&!save.upgrades.leon)save.upgrades.leon=save.upgrades.edgar;
+if(save.upgrades.gale&&!save.upgrades.sandy)save.upgrades.sandy=save.upgrades.gale;
+save.unlocked=save.unlocked.filter(id=>id!=='edgar'&&id!=='gale');
+delete save.upgrades.edgar;delete save.upgrades.gale;
 // Одноразовая компенсация за старые награды по 15 монет.
 if(!save.trophyRewardFixV1){
   const previouslyClaimed=save.claimed.filter(n=>Number.isInteger(n)&&n>=2000&&n<=100000&&n%1000===0);
@@ -208,6 +219,16 @@ if(x.id==='colt'){
   addShot(a,0,0,{bottle:true});
 }else if(x.id==='crow'){
   for(let i=0;i<3;i++)addShot(a+(i-1)*x.spread,x.damage/3,0,{poison:true});
+}else if(x.id==='spike'){
+  for(let i=0;i<5;i++)addShot(a+(i-2)*x.spread/2,x.damage/5,0,{pierce:false});
+}else if(x.id==='leon'){
+  // Леон выпускает четыре быстрых снаряда узким веером.
+  for(let i=0;i<4;i++)addShot(a+(i-1.5)*x.spread/3,x.damage/4);
+}else if(x.id==='emz'){
+  for(let i=0;i<3;i++)addShot(a,x.damage/3,i*90,{gasCloud:true});
+}else if(x.id==='sandy'){
+  // Сэнди атакует широким веером из пяти песчаных снарядов.
+  for(let i=0;i<5;i++)addShot(a+(i-2)*x.spread/2,x.damage/5);
 }else{
   const count=x.id==='shelly'?6:1;
   for(let i=0;i<count;i++)addShot(a+(i-(count-1)/2)*x.spread,x.damage/count,0,{pierce:x.id==='jessie'});
