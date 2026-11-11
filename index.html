@@ -54,13 +54,7 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:1/1;background:#579b55;
 </section>
 <section id="shopScreen" class="screen hidden">
 <h2>🛒 Магазин KILLKA</h2>
-<div class="panel"><div class="gold"><b>🔥 Ежедневная акция</b></div><p class="small">+60 монет всего за 25 монет. Обновляется каждый день.</p><button id="buyDaily" class="active">ЗАБРАТЬ АКЦИЮ — 25 🪙</button><div id="dailyStatus" class="small" style="margin-top:7px"></div></div>
-<div class="panel"><h2>💰 Монетные наборы</h2><div class="row">
-<div class="reward"><b>🪙 Маленький набор</b><div class="small">+90 монет · цена 40</div><button id="buyCoinsSmall">КУПИТЬ — 40 🪙</button></div>
-<div class="reward"><b>💎 Большой набор</b><div class="small">+250 монет · цена 100</div><button id="buyCoinsBig">КУПИТЬ — 100 🪙</button></div>
-</div></div>
 <div class="panel"><h2>⭐ Особое предложение</h2><b>🎁 Случайный новый боец</b><p class="small">Открой одного бойца, которого у тебя ещё нет. Цена: 180 монет.</p><button id="buyFighter">ОТКРЫТЬ БОЙЦА — 180 🪙</button><div id="fighterOfferStatus" class="small" style="margin-top:7px"></div></div>
-<div class="panel"><h2>🎉 Супер-набор</h2><p class="small">+400 монет и случайный новый боец. Цена: 300 монет.</p><button id="buySuper">КУПИТЬ СУПЕР-НАБОР — 300 🪙</button></div>
 <button class="backHome">← НАЗАД</button></section>
 <section id="upgradeScreen" class="screen hidden">
 <h2>⚡ Прокачка бойцов</h2>
@@ -140,7 +134,7 @@ ctx.clearRect(0,0,600,600);ctx.fillStyle='#579b55';ctx.fillRect(0,0,600,600);ctx
 if(mode==='gems'){circle(gem.x,gem.y,25,'#8b4bc4');ctx.fillStyle='#fff';ctx.font='bold 16px sans-serif';ctx.textAlign='center';ctx.fillText('💎',gem.x,gem.y+6)}
 
 if(mode==='heist'){ctx.fillStyle='#8a6b49';ctx.fillRect(475,255,75,90);ctx.fillStyle='#ffe17c';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.fillText('СЕЙФ',512,305);ctx.fillStyle='#222';ctx.fillRect(470,235,85,7);ctx.fillStyle='#69dc77';ctx.fillRect(470,235,85*safeHP/100,7)}
-let alive=enemies.filter(e=>e.hp>0);for(let e of alive){let dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1;e.x+=dx/d*.42*dt;e.y+=dy/d*.42*dt;e.cd-=dt;if(d<230&&e.cd<=0){enemyShots.push({x:e.x,y:e.y,vx:dx/d*2.8,vy:dy/d*2.8,life:75});e.cd=95+Math.random()*35}circle(e.x,e.y,15,'#b83d45');circle(e.x,e.y-3,7,'#ffcfaa');ctx.fillStyle='#18233b';ctx.fillRect(e.x-16,e.y-25,32,4);ctx.fillStyle='#6be17b';ctx.fillRect(e.x-16,e.y-25,32*e.hp/e.max,4)}
+let alive=enemies.filter(e=>e.hp>0);for(let e of alive){let dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1;e.x+=dx/d*.62*dt;e.y+=dy/d*.62*dt;e.cd-=dt;if(d<230&&e.cd<=0){enemyShots.push({x:e.x,y:e.y,vx:dx/d*3.4,vy:dy/d*3.4,life:75});e.cd=95+Math.random()*35}circle(e.x,e.y,15,'#b83d45');circle(e.x,e.y-3,7,'#ffcfaa');ctx.fillStyle='#18233b';ctx.fillRect(e.x-16,e.y-25,32,4);ctx.fillStyle='#6be17b';ctx.fillRect(e.x-16,e.y-25,32*e.hp/e.max,4)}
 for(let s of shots){
 if(s.wait>0){s.wait-=dt;continue}
 s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;
@@ -161,7 +155,7 @@ circle(s.x,s.y,s.r,'#ffe16b')
 shots=shots.filter(s=>s.life>0);
 for(let e of effects){e.life-=dt;ctx.strokeStyle='rgba(255,210,80,'+Math.max(0,e.life/14)+')';ctx.lineWidth=5;ctx.beginPath();ctx.arc(e.x,e.y,e.r*(1+(14-e.life)/14*.25),0,Math.PI*2);ctx.stroke()}
 effects=effects.filter(e=>e.life>0);
-for(let s of enemyShots){s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;if(Math.hypot(s.x-player.x,s.y-player.y)<18){hp-=.22*dt*4;s.life=0}circle(s.x,s.y,5,'#ff9b72')}enemyShots=enemyShots.filter(s=>s.life>0);
+for(let s of enemyShots){s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;if(Math.hypot(s.x-player.x,s.y-player.y)<18){hp-=.33*dt*4;s.life=0}circle(s.x,s.y,5,'#ff9b72')}enemyShots=enemyShots.filter(s=>s.life>0);
 if(mode==='gems'&&Math.hypot(player.x-gem.x,player.y-gem.y)<35&&crystals<10){crystals++;gem={x:55+Math.random()*490,y:55+Math.random()*490};$('status').textContent='Кристалл подобран! 💎';}
 
 if(aiming){ctx.save();ctx.translate(player.x,player.y);ctx.rotate(Math.atan2(aim.y,aim.x));ctx.strokeStyle='#fff3a8';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(f().range,0);ctx.stroke();ctx.restore()}
@@ -192,24 +186,10 @@ function unlockRandomFighter(){
   return prize;
 }
 function updateShopDaily(){
-  const today=new Date().toISOString().slice(0,10);
-  const used=save.shopDaily===today;
-  $('buyDaily').disabled=used;
-  $('buyDaily').textContent=used?'АКЦИЯ УЖЕ ПОЛУЧЕНА':'ЗАБРАТЬ АКЦИЮ — 25 🪙';
-  $('dailyStatus').textContent=used?'Ты уже забрал сегодняшнюю акцию.':'Предложение доступно один раз в день.';
   const locked=fighters.some(x=>!save.unlocked.includes(x.id));
   $('buyFighter').disabled=!locked;
-  $('buySuper').disabled=!locked;
   $('fighterOfferStatus').textContent=locked?'Случайный боец из ещё не открытых.':'Ты уже открыл всех бойцов!';
 }
-$('buyDaily').onclick=()=>{
-  if(save.shopDaily===new Date().toISOString().slice(0,10))return;
-  if(buyWithCoins(25,()=>{save.coins+=60;save.shopDaily=new Date().toISOString().slice(0,10)})){
-    updateShopDaily();
-  }
-};
-$('buyCoinsSmall').onclick=()=>buyWithCoins(40,()=>{save.coins+=90});
-$('buyCoinsBig').onclick=()=>buyWithCoins(100,()=>{save.coins+=250});
 $('buyFighter').onclick=()=>{
   if(!fighters.some(x=>!save.unlocked.includes(x.id))){updateShopDaily();return}
   let prize;
@@ -218,14 +198,7 @@ $('buyFighter').onclick=()=>{
     updateShopDaily();
   }
 };
-$('buySuper').onclick=()=>{
-  if(!fighters.some(x=>!save.unlocked.includes(x.id))){updateShopDaily();return}
-  let prize;
-  if(buyWithCoins(300,()=>{save.coins+=400;prize=unlockRandomFighter()})){
-    $('fighterOfferStatus').textContent='🎉 Супер-набор! Новый боец: '+prize.name;
-    updateShopDaily();
-  }
-};
+
 
 let upgradeChosen='colt';
 function renderUpgradeFighters(){
@@ -246,7 +219,19 @@ $('buyUpgrade').onclick=()=>{const level=save.upgrades[upgradeChosen]||0;if(leve
 $('upgrades').onclick=()=>{renderUpgradeFighters();renderUpgradeDetails();show('upgradeScreen')};
 $('shop').onclick=()=>{updateShopDaily();show('shopScreen')};
 
-function drawRoad(){let milestones=[0,100,250,500,750,1000];$('roadItems').innerHTML=milestones.map(n=>`<div class="reward"><b>${n} 🏆 кубков</b><div class="small">Награда за достижение</div>${save.trophies>=n?(save.claimed.includes(n)?'<span class="gold">✓ Получено</span>':`<button data-claim="${n}">ЗАБРАТЬ</button>`):'<span class="small">🔒 Ещё не открыто</span>'}</div>`).join('');document.querySelectorAll('[data-claim]').forEach(b=>b.onclick=()=>{let n=+b.dataset.claim;if(save.trophies<n||save.claimed.includes(n))return;save.claimed.push(n);save.coins+=n===100?50:n===250?100:n===500?200:n===750?300:n===1000?500:0;persist();drawRoad()})}
+function drawRoad(){
+  const milestones=[0,100,250,500,750,1000,...Array.from({length:99},(_,i)=>(i+2)*1000)];
+  const rewardFor=n=>n===100?50:n===250?100:n===500?200:n===750?300:n===1000?500:n>=2000?15:0;
+  $('roadItems').innerHTML=milestones.map(n=>`<div class="reward"><b>${n.toLocaleString('ru-RU')} 🏆 кубков</b><div class="small">Награда: ${rewardFor(n)} 🪙</div>${save.trophies>=n?(save.claimed.includes(n)?'<span class="gold">✓ Получено</span>':`<button data-claim="${n}">ЗАБРАТЬ</button>`):'<span class="small">🔒 Ещё не открыто</span>'}</div>`).join('');
+  document.querySelectorAll('[data-claim]').forEach(b=>b.onclick=()=>{
+    const n=+b.dataset.claim;
+    if(save.trophies<n||save.claimed.includes(n))return;
+    save.claimed.push(n);
+    save.coins+=rewardFor(n);
+    persist();
+    drawRoad();
+  });
+}
 $('openBox').onclick=()=>{if(save.coins<30){$('boxResult').textContent='Не хватает монет!';return}save.coins-=30;let r=Math.random();if(r<.15){let locked=fighters.filter(x=>!save.unlocked.includes(x.id));if(locked.length){let prize=locked[Math.floor(Math.random()*locked.length)];save.unlocked.push(prize.id);$('boxResult').textContent='🎉 Новый боец: '+prize.name+'!';renderFighters()}else{save.coins+=50;$('boxResult').textContent='Все бойцы открыты! +50 монет'}}else{let n=9+Math.floor(Math.random()*4);save.coins+=n;$('boxResult').textContent='✨ Выпало '+n+' монет!'}persist()};
 renderFighters();renderUpgradeFighters();renderUpgradeDetails();refresh();
 })();
