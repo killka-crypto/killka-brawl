@@ -91,7 +91,7 @@ const fighters=[
 const modes={gems:{name:'ЗАХВАТ КРИСТАЛЛОВ',goal:'Собери 10 кристаллов',icon:'💎'},knockout:{name:'НОКАУТ',goal:'Победи 3 противников',icon:'💥'},showdown:{name:'СТОЛКНОВЕНИЕ',goal:'Победи 10 противников',icon:'☠️'},heist:{name:'ОГРАБЛЕНИЕ',goal:'Уничтожь сейф врага',icon:'💰'}};
 let save={coins:100,trophies:0,claimed:[],unlocked:['colt'],upgrades:{}};try{save={...save,...JSON.parse(localStorage.getItem('kbAutoSave')||'{}')}}catch(e){}
 if(!Array.isArray(save.claimed))save.claimed=[];if(!Array.isArray(save.unlocked))save.unlocked=['colt'];if(!save.upgrades||typeof save.upgrades!=='object')save.upgrades={};fighters.forEach(x=>{let n=Number(save.upgrades[x.id]||0);save.upgrades[x.id]=Math.max(0,Math.min(11,Number.isFinite(n)?Math.floor(n):0))});
-let chosen='colt',mode='gems',running=false,reloading=false,ammo=3,hp=100,player={x:300,y:300},enemies=[],shots=[],enemyShots=[],move={x:0,y:0},aim={x:1,y:0},aiming=false,last=0,reloadStart=0,reloadToken=0,raf=0,crystals=0,goals=0,safeHP=100,gem={x:300,y:300};
+let chosen='colt',mode='gems',running=false,reloading=false,ammo=3,hp=100,player={x:300,y:300},enemies=[],shots=[],enemyShots=[],effects=[],move={x:0,y:0},aim={x:1,y:0},aiming=false,last=0,reloadStart=0,reloadToken=0,raf=0,crystals=0,goals=0,safeHP=100,gem={x:300,y:300};
 const f=()=>{const base=fighters.find(x=>x.id===chosen)||fighters[0];const level=save.upgrades[base.id]||0;return {...base,hp:Math.round(base.hp*(1+level*.04)),damage:Math.round(base.damage*(1+level*.05))}};
 function persist(){localStorage.setItem('kbAutoSave',JSON.stringify(save));refresh()}
 function refresh(){$('coins').textContent=save.coins;$('trophies').textContent=save.trophies;$('progress').style.width=Math.min(100,save.trophies/500*100)+'%';$('progressText').textContent=save.trophies+' / 500 кубков'}
@@ -105,7 +105,33 @@ let count=mode==='showdown'?10:mode==='knockout'?3:mode==='gems'?6:5;
 enemies=Array.from({length:count},(_,i)=>{let a=i*Math.PI*2/count;return{x:300+Math.cos(a)*220,y:300+Math.sin(a)*220,hp:55,max:55,cd:Math.random()*80}});
 $('arenaName').textContent=modes[mode].icon+' '+modes[mode].name+' — '+f().name;$('status').textContent=modes[mode].goal+' · Левый джойстик — движение, правый — прицел и выстрел.';$('reloadLabel').textContent='Готов к бою';$('reloadbar').style.width='0%';hud();show('arenaScreen');last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop)}
 function reload(){if(!running||reloading||ammo===3)return;reloading=true;const token=++reloadToken;reloadStart=performance.now();const duration=f().reload;$('reloadLabel').textContent='Автоперезарядка…';function tick(){if(!running||!reloading||token!==reloadToken)return;let p=Math.min(100,(performance.now()-reloadStart)/duration*100);$('reloadbar').style.width=p+'%';if(p<100){requestAnimationFrame(tick);return}ammo=3;reloading=false;hud();$('reloadLabel').textContent='Заряжено!';$('reloadbar').style.width='0%'}requestAnimationFrame(tick)}
-function shoot(){if(!running)return;if(reloading||ammo<=0){reload();return}ammo--;let x=f(),a=Math.atan2(aim.y,aim.x),count=x.id==='colt'||x.id==='bo'?3:x.id==='shelly'?6:x.id==='darryl'?8:1;for(let i=0;i<count;i++){let spread=x.id==='bo'?.10:x.spread;let angle=a+(i-(count-1)/2)*spread;shots.push({x:player.x,y:player.y,vx:Math.cos(angle)*8,vy:Math.sin(angle)*8,life:x.range/8,damage:x.damage/count,r:6,pierce:x.id==='poco'})}hud();$('status').textContent='Атака!';if(ammo===0)reload()}
+function shoot(){
+if(!running)return;if(reloading||ammo<=0){reload();return}
+ammo--;let x=f(),a=Math.atan2(aim.y,aim.x),now=performance.now();
+const addShot=(angle,damage,wait=0,extra={})=>shots.push({x:player.x,y:player.y,vx:Math.cos(angle)*8,vy:Math.sin(angle)*8,life:x.range/8,damage,r:6,wait,...extra});
+if(x.id==='colt'){
+  for(let i=0;i<3;i++)addShot(a,x.damage/3,i*7);
+}else if(x.id==='darryl'){
+  for(let volley=0;volley<2;volley++)for(let i=0;i<8;i++)
+    addShot(a+(i-3.5)*x.spread/7,x.damage/16,volley*7);
+}else if(x.id==='dynamike'){
+  addShot(a,x.damage,0,{explosive:true});
+}else if(x.id==='bull'||x.id==='poco'){
+  const side={x:-Math.sin(a),y:Math.cos(a)};
+  const pattern=[[-12,-4],[0,-4],[12,-4],[-6,4],[6,4],[0,12]];
+  for(const [lateral,forward] of pattern){
+    const shot= {x:player.x+side.x*lateral+Math.cos(a)*forward,
+      y:player.y+side.y*lateral+Math.sin(a)*forward,
+      vx:Math.cos(a)*8,vy:Math.sin(a)*8,life:x.range/8,
+      damage:x.damage/6,r:6,pierce:x.id==='poco'};
+    shots.push(shot);
+  }
+}else{
+  const count=x.id==='shelly'?6:1;
+  for(let i=0;i<count;i++)addShot(a+(i-(count-1)/2)*x.spread,x.damage/count);
+}
+hud();$('status').textContent='Атака!';if(ammo===0)reload()
+}
 const canvas=$('field'),ctx=canvas.getContext('2d');
 
 function circle(x,y,r,color){ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill()}
@@ -115,9 +141,26 @@ if(mode==='gems'){circle(gem.x,gem.y,25,'#8b4bc4');ctx.fillStyle='#fff';ctx.font
 
 if(mode==='heist'){ctx.fillStyle='#8a6b49';ctx.fillRect(475,255,75,90);ctx.fillStyle='#ffe17c';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.fillText('СЕЙФ',512,305);ctx.fillStyle='#222';ctx.fillRect(470,235,85,7);ctx.fillStyle='#69dc77';ctx.fillRect(470,235,85*safeHP/100,7)}
 let alive=enemies.filter(e=>e.hp>0);for(let e of alive){let dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1;e.x+=dx/d*.42*dt;e.y+=dy/d*.42*dt;e.cd-=dt;if(d<230&&e.cd<=0){enemyShots.push({x:e.x,y:e.y,vx:dx/d*2.8,vy:dy/d*2.8,life:75});e.cd=95+Math.random()*35}circle(e.x,e.y,15,'#b83d45');circle(e.x,e.y-3,7,'#ffcfaa');ctx.fillStyle='#18233b';ctx.fillRect(e.x-16,e.y-25,32,4);ctx.fillStyle='#6be17b';ctx.fillRect(e.x-16,e.y-25,32*e.hp/e.max,4)}
-for(let s of shots){s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;for(let e of alive)if(Math.hypot(e.x-s.x,e.y-s.y)<20){e.hp-=s.damage;if(!s.pierce)s.life=0;if(mode==='heist'&&Math.hypot(512-s.x,300-s.y)<65)safeHP-=s.damage;if(!s.pierce)break}
-if(mode==='heist'&&Math.hypot(512-s.x,300-s.y)<55){safeHP-=s.damage;s.life=0}circle(s.x,s.y,s.r,'#ffe16b')}
+for(let s of shots){
+if(s.wait>0){s.wait-=dt;continue}
+s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;
+if(s.explosive){
+  if(s.life<=0){
+    const radius=48;
+    for(let e of alive)if(Math.hypot(e.x-s.x,e.y-s.y)<=radius)e.hp-=s.damage;
+    if(mode==='heist'&&Math.hypot(512-s.x,300-s.y)<=radius+35)safeHP-=s.damage;
+    effects.push({x:s.x,y:s.y,life:14,r:radius});
+    s.life=0;
+  }else circle(s.x,s.y,s.r,'#ffe16b');
+  continue;
+}
+for(let e of alive)if(Math.hypot(e.x-s.x,e.y-s.y)<20){e.hp-=s.damage;if(!s.pierce)s.life=0;if(mode==='heist'&&Math.hypot(512-s.x,300-s.y)<65)safeHP-=s.damage;if(!s.pierce)break}
+if(mode==='heist'&&Math.hypot(512-s.x,300-s.y)<55){safeHP-=s.damage;s.life=0}
+circle(s.x,s.y,s.r,'#ffe16b')
+}
 shots=shots.filter(s=>s.life>0);
+for(let e of effects){e.life-=dt;ctx.strokeStyle='rgba(255,210,80,'+Math.max(0,e.life/14)+')';ctx.lineWidth=5;ctx.beginPath();ctx.arc(e.x,e.y,e.r*(1+(14-e.life)/14*.25),0,Math.PI*2);ctx.stroke()}
+effects=effects.filter(e=>e.life>0);
 for(let s of enemyShots){s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;if(Math.hypot(s.x-player.x,s.y-player.y)<18){hp-=.22*dt*4;s.life=0}circle(s.x,s.y,5,'#ff9b72')}enemyShots=enemyShots.filter(s=>s.life>0);
 if(mode==='gems'&&Math.hypot(player.x-gem.x,player.y-gem.y)<35&&crystals<10){crystals++;gem={x:55+Math.random()*490,y:55+Math.random()*490};$('status').textContent='Кристалл подобран! 💎';}
 
