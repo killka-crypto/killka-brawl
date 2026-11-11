@@ -116,7 +116,7 @@ function objective(){if(mode==='gems')return `💎 ${crystals}/10`;if(mode==='kn
 function hud(){$('ammo').textContent=ammo+'/3';$('hp').textContent=Math.max(0,Math.ceil(hp));$('healthbar').style.width=Math.max(0,hp/f().hp*100)+'%';$('objective').textContent=objective()}
 function start(){chosen=save.unlocked.includes(chosen)?chosen:'colt';running=true;reloading=false;reloadToken++;aiming=false;move={x:0,y:0};ammo=3;hp=f().hp;player={x:300,y:300};shots=[];enemyShots=[];crystals=0;goals=0;safeHP=2000;safeShieldUntil=0;safeNextShield=1500;gem={x:300,y:300};
 let count=mode==='showdown'?10:mode==='knockout'?3:mode==='gems'?6:5;
-enemies=Array.from({length:count},(_,i)=>{let a=i*Math.PI*2/count;return{x:300+Math.cos(a)*220,y:300+Math.sin(a)*220,hp:55,max:55,cd:Math.random()*80}});
+enemies=Array.from({length:count},(_,i)=>{let a=i*Math.PI*2/count;return{x:300+Math.cos(a)*220,y:300+Math.sin(a)*220,hp:55,max:55,cd:Math.random()*80,style:i%3,strafe:i%2?1:-1}});
 $('arenaName').textContent=modes[mode].icon+' '+modes[mode].name+' — '+f().name;$('status').textContent=modes[mode].goal+' · Левый джойстик — движение, правый — прицел и выстрел.';$('reloadLabel').textContent='Готов к бою';$('reloadbar').style.width='0%';hud();show('arenaScreen');last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop)}
 function reload(){if(!running||reloading||ammo===3)return;reloading=true;const token=++reloadToken;reloadStart=performance.now();const duration=f().reload;$('reloadLabel').textContent='Автоперезарядка…';function tick(){if(!running||!reloading||token!==reloadToken)return;let p=Math.min(100,(performance.now()-reloadStart)/duration*100);$('reloadbar').style.width=p+'%';if(p<100){requestAnimationFrame(tick);return}ammo=3;reloading=false;hud();$('reloadLabel').textContent='Заряжено!';$('reloadbar').style.width='0%'}requestAnimationFrame(tick)}
 function shoot(){
@@ -169,7 +169,29 @@ ctx.clearRect(0,0,600,600);ctx.fillStyle='#579b55';ctx.fillRect(0,0,600,600);ctx
 if(mode==='gems'){circle(gem.x,gem.y,25,'#8b4bc4');ctx.fillStyle='#fff';ctx.font='bold 16px sans-serif';ctx.textAlign='center';ctx.fillText('💎',gem.x,gem.y+6)}
 
 if(mode==='heist'){const shielded=now<safeShieldUntil;ctx.fillStyle='#8a6b49';ctx.fillRect(475,255,75,90);ctx.fillStyle='#ffe17c';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.fillText('СЕЙФ',512,305);if(shielded){ctx.strokeStyle='#65d9ff';ctx.lineWidth=7;ctx.strokeRect(469,249,87,102);ctx.fillStyle='#65d9ff';ctx.font='bold 11px sans-serif';ctx.fillText('ЩИТ '+Math.ceil((safeShieldUntil-now)/1000)+'с',512,365)}ctx.fillStyle='#222';ctx.fillRect(470,235,85,7);ctx.fillStyle=shielded?'#65d9ff':'#69dc77';ctx.fillRect(470,235,85*safeHP/2000,7);ctx.fillStyle='#fff';ctx.font='10px sans-serif';ctx.fillText(Math.ceil(safeHP)+'/2000',512,230)}
-let alive=enemies.filter(e=>e.hp>0);for(let e of alive){if(e.poisonUntil>now)e.hp-=e.poisonDps*dt;let dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1;e.x+=dx/d*.62*dt;e.y+=dy/d*.62*dt;e.cd-=dt;if(d<230&&e.cd<=0){enemyShots.push({x:e.x,y:e.y,vx:dx/d*3.4,vy:dy/d*3.4,life:75});e.cd=95+Math.random()*35}circle(e.x,e.y,15,'#b83d45');circle(e.x,e.y-3,7,'#ffcfaa');ctx.fillStyle='#18233b';ctx.fillRect(e.x-16,e.y-25,32,4);ctx.fillStyle='#6be17b';ctx.fillRect(e.x-16,e.y-25,32*e.hp/e.max,4)}
+let alive=enemies.filter(e=>e.hp>0);for(let e of alive){
+if(e.poisonUntil>now)e.hp-=e.poisonDps*dt;
+if(e.hp<=0)continue;
+let dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1,ux=dx/d,uy=dy/d;
+// У каждого противника своя тактика: штурм, дистанция или обход.
+let preferred=e.style===0?62:e.style===1?155:108;
+if(e.hp<e.max*.3)preferred=190; // раненый противник отступает
+let radial=d>preferred+12?1:d<preferred-12?-1:0;
+let strafePower=e.style===0?.12:e.style===1?.48:.72;
+let mx=ux*radial-uy*e.strafe*strafePower;
+let my=uy*radial+ux*e.strafe*strafePower;
+// Противники не сбиваются в одну точку.
+for(const other of alive){if(other===e||other.hp<=0)continue;let sx=e.x-other.x,sy=e.y-other.y,sd=Math.hypot(sx,sy);if(sd>0&&sd<42){mx+=(sx/sd)*(42-sd)/42*.9;my+=(sy/sd)*(42-sd)/42*.9}}
+// Если рядом летит снаряд игрока, противник старается уклониться.
+let threat=null,threatDist=58;
+for(const shot of shots){if(shot.wait>0)continue;let td=Math.hypot(shot.x-e.x,shot.y-e.y);if(td<threatDist){threat=shot;threatDist=td}}
+if(threat){let side=(threat.vx*uy-threat.vy*ux)>=0?1:-1,sv=Math.hypot(threat.vx,threat.vy)||1;mx+=(-threat.vy/sv)*side*1.25;my+=(threat.vx/sv)*side*1.25}
+let ml=Math.hypot(mx,my)||1,speed=e.style===0?.88:e.style===1?.58:.72;
+e.x=Math.max(24,Math.min(576,e.x+mx/ml*speed*dt));e.y=Math.max(24,Math.min(576,e.y+my/ml*speed*dt));
+e.cd-=dt;
+if(d<250&&e.cd<=0){let lead=Math.min(12,d/3.4),tx=player.x+move.x*3.2*lead,ty=player.y+move.y*3.2*lead,txd=tx-e.x,tyd=ty-e.y,tl=Math.hypot(txd,tyd)||1;enemyShots.push({x:e.x,y:e.y,vx:txd/tl*3.4,vy:tyd/tl*3.4,life:80});e.cd=(e.style===0?88:e.style===1?105:96)+Math.random()*28}
+circle(e.x,e.y,15,e.style===0?'#c64b43':e.style===1?'#9b55c9':'#d17a35');circle(e.x,e.y-3,7,'#ffcfaa');ctx.fillStyle='#18233b';ctx.fillRect(e.x-16,e.y-25,32,4);ctx.fillStyle='#6be17b';ctx.fillRect(e.x-16,e.y-25,32*Math.max(0,e.hp)/e.max,4)
+}
 for(let s of shots){
 if(s.wait>0){s.wait-=dt;continue}
 s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;
