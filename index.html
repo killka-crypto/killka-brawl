@@ -169,6 +169,19 @@ ctx.clearRect(0,0,600,600);ctx.fillStyle='#579b55';ctx.fillRect(0,0,600,600);ctx
 if(mode==='gems'){circle(gem.x,gem.y,25,'#8b4bc4');ctx.fillStyle='#fff';ctx.font='bold 16px sans-serif';ctx.textAlign='center';ctx.fillText('💎',gem.x,gem.y+6)}
 
 if(mode==='heist'){const shielded=now<safeShieldUntil;ctx.fillStyle='#8a6b49';ctx.fillRect(475,255,75,90);ctx.fillStyle='#ffe17c';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.fillText('СЕЙФ',512,305);if(shielded){ctx.strokeStyle='#65d9ff';ctx.lineWidth=7;ctx.strokeRect(469,249,87,102);ctx.fillStyle='#65d9ff';ctx.font='bold 11px sans-serif';ctx.fillText('ЩИТ '+Math.ceil((safeShieldUntil-now)/1000)+'с',512,365)}ctx.fillStyle='#222';ctx.fillRect(470,235,85,7);ctx.fillStyle=shielded?'#65d9ff':'#69dc77';ctx.fillRect(470,235,85*safeHP/2000,7);ctx.fillStyle='#fff';ctx.font='10px sans-serif';ctx.fillText(Math.ceil(safeHP)+'/2000',512,230)}
+// В захвате кристаллов и ограблении противники возрождаются через 5 секунд.
+if(mode==='gems'||mode==='heist'){
+  for(const e of enemies){
+    if(e.hp<=0){
+      if(!e.respawnAt)e.respawnAt=now+5000;
+      if(now>=e.respawnAt){
+        const a=Math.random()*Math.PI*2;
+        e.x=300+Math.cos(a)*220;e.y=300+Math.sin(a)*220;
+        e.hp=e.max;e.cd=35+Math.random()*45;e.poisonUntil=0;e.poisonDps=0;e.respawnAt=0;
+      }
+    }
+  }
+}
 let alive=enemies.filter(e=>e.hp>0);for(let e of alive){
 if(e.poisonUntil>now)e.hp-=e.poisonDps*dt;
 if(e.hp<=0)continue;
