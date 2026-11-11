@@ -220,14 +220,31 @@ $('upgrades').onclick=()=>{renderUpgradeFighters();renderUpgradeDetails();show('
 $('shop').onclick=()=>{updateShopDaily();show('shopScreen')};
 
 function drawRoad(){
-  const milestones=[0,100,250,500,750,1000,...Array.from({length:99},(_,i)=>(i+2)*1000)];
-  const rewardFor=n=>n===100?50:n===250?100:n===500?200:n===750?300:n===1000?500:n>=2000?15:0;
-  $('roadItems').innerHTML=milestones.map(n=>`<div class="reward"><b>${n.toLocaleString('ru-RU')} 🏆 кубков</b><div class="small">Награда: ${rewardFor(n)} 🪙</div>${save.trophies>=n?(save.claimed.includes(n)?'<span class="gold">✓ Получено</span>':`<button data-claim="${n}">ЗАБРАТЬ</button>`):'<span class="small">🔒 Ещё не открыто</span>'}</div>`).join('');
+  const milestones=[0,100,250,500,750,...Array.from({length:100},(_,i)=>(i+1)*1000)];
+  const rewardText=n=>{
+    if(n<1000)return `${n===100?50:n===250?100:n===500?200:n===750?300:0} 🪙`;
+    return n%20000===0
+      ? (fighters.some(x=>!save.unlocked.includes(x.id))?'500 🪙 + 🎁 случайный боец':'500 🪙 + 3 000 🪙')
+      : '500 🪙';
+  };
+  $('roadItems').innerHTML=milestones.map(n=>`<div class="reward"><b>${n.toLocaleString('ru-RU')} 🏆 кубков</b><div class="small">Награда: ${rewardText(n)}</div>${save.trophies>=n?(save.claimed.includes(n)?'<span class="gold">✓ Получено</span>':`<button data-claim="${n}">ЗАБРАТЬ</button>`):'<span class="small">🔒 Ещё не открыто</span>'}</div>`).join('');
   document.querySelectorAll('[data-claim]').forEach(b=>b.onclick=()=>{
     const n=+b.dataset.claim;
     if(save.trophies<n||save.claimed.includes(n))return;
     save.claimed.push(n);
-    save.coins+=rewardFor(n);
+    if(n>=1000)save.coins+=500;
+    else save.coins+=(n===100?50:n===250?100:n===500?200:n===750?300:0);
+    if(n>=20000&&n%20000===0){
+      const locked=fighters.filter(x=>!save.unlocked.includes(x.id));
+      if(locked.length){
+        const prize=locked[Math.floor(Math.random()*locked.length)];
+        save.unlocked.push(prize.id);
+        $('fighterInfo').textContent='🎉 За дорогу славы открыт новый боец: '+prize.name+'!';
+        renderFighters();
+      }else{
+        save.coins+=3000;
+      }
+    }
     persist();
     drawRoad();
   });
