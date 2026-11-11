@@ -212,6 +212,10 @@ s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;
 if(s.bottle){
   if(s.life<=0){
     const radius=44;
+    // В момент взрыва бутылка наносит основной урон врагам рядом.
+    for(const e of alive){
+      if(e.hp>0&&Math.hypot(e.x-s.x,e.y-s.y)<=radius)e.hp-=70;
+    }
     puddles.push({x:s.x,y:s.y,r:radius,life:180,maxLife:180,dps:2});
     effects.push({x:s.x,y:s.y,life:14,r:radius});
     s.life=0;
