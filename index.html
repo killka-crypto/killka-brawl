@@ -220,15 +220,17 @@ if(x.id==='colt'){
 }else if(x.id==='crow'){
   for(let i=0;i<3;i++)addShot(a+(i-1)*x.spread,x.damage/3,0,{poison:true});
 }else if(x.id==='spike'){
-  for(let i=0;i<5;i++)addShot(a+(i-2)*x.spread/2,x.damage/5,0,{pierce:false});
+  // Основной шип разлетается на шесть осколков в конце полёта.
+  addShot(a,0,0,{spikeSeed:true,burstDamage:x.damage/6});
 }else if(x.id==='leon'){
-  // Леон выпускает четыре быстрых снаряда узким веером.
-  for(let i=0;i<4;i++)addShot(a+(i-1.5)*x.spread/3,x.damage/4);
+  // Леон выпускает четыре маленьких снаряда с прежним разбросом и небольшой задержкой.
+  for(let i=0;i<4;i++)addShot(a+(i-1.5)*x.spread/3,x.damage/4,i*8,{r:4});
 }else if(x.id==='emz'){
-  for(let i=0;i<3;i++)addShot(a,x.damage/3,i*90,{gasCloud:true});
+  // Три облака Эмз постепенно замедляются к концу полёта.
+  for(let i=0;i<3;i++)addShot(a,x.damage/3,i*90,{gasCloud:true,slowAtEnd:true});
 }else if(x.id==='sandy'){
-  // Сэнди атакует широким веером из пяти песчаных снарядов.
-  for(let i=0;i<5;i++)addShot(a+(i-2)*x.spread/2,x.damage/5);
+  // Сохраняем прежний веер Сэнди, добавляя задержку между снарядами.
+  for(let i=0;i<5;i++)addShot(a+(i-2)*x.spread/2,x.damage/5,i*8);
 }else{
   const count=x.id==='shelly'?6:1;
   for(let i=0;i<count;i++)addShot(a+(i-(count-1)/2)*x.spread,x.damage/count,0,{pierce:x.id==='jessie'});
@@ -238,6 +240,14 @@ hud();$('status').textContent='Атака!';if(ammo===0)reload()
 const canvas=$('field'),ctx=canvas.getContext('2d');
 
 function circle(x,y,r,color){ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill()}
+function spikeBurst(s){
+  for(let i=0;i<6;i++){
+    const angle=i*Math.PI/3;
+    shots.push({x:s.x,y:s.y,vx:Math.cos(angle)*7,vy:Math.sin(angle)*7,
+      life:18,damage:s.burstDamage,r:4,pierce:false,spikeFragment:true});
+  }
+  effects.push({x:s.x,y:s.y,life:12,r:28});
+}
 function damageOwnSafe(amount){const now=performance.now();if(now<ownSafeShieldUntil||ownSafeHP<=0)return;ownSafeHP=Math.max(0,ownSafeHP-amount);if(ownSafeNextShield>0&&ownSafeHP<=ownSafeNextShield){ownSafeHP=ownSafeNextShield;ownSafeShieldUntil=now+10000;ownSafeNextShield-=187.5;$('status').textContent='🛡️ Твой сейф активировал щит на 10 секунд!';}}
 function damageSafe(amount){const now=performance.now();if(now<safeShieldUntil||safeHP<=0)return;safeHP=Math.max(0,safeHP-amount);if(safeNextShield>0&&safeHP<=safeNextShield){safeHP=safeNextShield;safeShieldUntil=now+10000;safeNextShield-=187.5;$('status').textContent='🛡️ Сейф активировал щит на 10 секунд!';}}
 function loop(now){if(!running)return;let dt=Math.min(2,(now-last)/16.67);last=now;updateKeyboardMove();player.x=Math.max(22,Math.min(578,player.x+move.x*3.2*dt));player.y=Math.max(22,Math.min(578,player.y+move.y*3.2*dt));
@@ -321,6 +331,28 @@ allyShots=allyShots.filter(s=>s.life>0);
 for(let s of shots){
 if(s.wait>0){s.wait-=dt;continue}
 s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;
+if(s.spikeSeed){
+  let hit=false;
+  for(const e of alive){
+    if(e.hp>0&&Math.hypot(e.x-s.x,e.y-s.y)<20){
+      hit=true;
+      break;
+    }
+  }
+  if(hit||s.life<=0){
+    spikeBurst(s);
+    s.life=0;
+  }else{
+    circle(s.x,s.y,7,'#7bdc67');
+  }
+  continue;
+}
+if(s.slowAtEnd){
+  const remaining=Math.max(0,s.life/(x.range/8));
+  const factor=0.35+0.65*Math.min(1,remaining);
+  s.vx=Math.cos(Math.atan2(s.vy,s.vx))*8*factor;
+  s.vy=Math.sin(Math.atan2(s.vy,s.vx))*8*factor;
+}
 if(s.bottle){
   if(s.life<=0){
     const radius=44;
