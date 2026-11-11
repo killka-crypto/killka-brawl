@@ -41,7 +41,7 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:1/1;background:#579b55;
 </div>
 <button id="playSelectedMode" class="active" style="width:100%;font-size:20px;padding:15px">⚔️ ИГРАТЬ</button></div>
 <div class="panel"><h2>👤 Выбери бойца</h2><div id="fighters" class="row"></div><div id="fighterInfo" class="small" style="margin-top:8px"></div></div>
-<div class="row"><button id="shop" style="flex:1">🛒 МАГАЗИН</button><button id="road" style="flex:1">🏆 ДОРОГА СЛАВЫ</button><button id="boxes" style="flex:1">🎁 ЯЩИКИ</button><button id="upgrades" style="flex:1">⚡ ПРОКАЧКА</button></div>
+<div class="row"><button id="shop" style="flex:1">🛒 МАГАЗИН</button><button id="road" style="flex:1">🏆 ДОРОГА СЛАВЫ</button><button id="boxes" style="flex:1">🎁 ЯЩИКИ</button><button id="upgrades" style="flex:1">⚡ ПРОКАЧКА</button><button id="settings" style="flex:1">⚙️ НАСТРОЙКИ</button></div>
 <div class="panel" id="rankPanel"><div class="gold" style="font-weight:bold">🏅 Ранговый путь</div><div id="rankInfo" style="font-weight:900;margin-top:6px">Бронза I · 0 очков</div><div class="bar" style="margin:8px 0"><div id="rankProgress" style="width:0%;background:#c58cff"></div></div><div class="small">Победа в ранговом бою: +25 очков · Поражение: −10 очков</div></div>
 <div class="panel"><div class="gold" style="font-weight:bold">Твои достижения</div><div class="bar" style="margin-top:8px"><div id="progress"></div></div><div class="small" id="progressText"></div></div>
 </section>
@@ -66,11 +66,25 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:1/1;background:#579b55;
 <div class="bar"><div id="healthbar"></div></div><canvas id="field" width="600" height="600"></canvas>
 <div class="row" style="justify-content:space-between;font-size:14px;font-weight:bold"><span>🔫 Патроны: <b id="ammo">3/3</b></span><span id="reloadLabel" class="gold">Готов к бою</span></div>
 <div class="bar"><div id="reloadbar" style="width:0%"></div></div>
-<div class="status" id="status">Левый джойстик — движение. Правый — прицел и выстрел.</div>
+<div class="status" id="status">Управляй бойцом с помощью джойстиков. Управление на ПК включается в настройках.</div>
+<div class="small" style="text-align:center;margin:4px 0 8px">⚙️ Управление на компьютере можно включить во вкладке «Настройки».</div>
 <div class="controls">
 <div style="text-align:center"><div class="stick" id="moveStick"><div class="knob" id="moveKnob"></div></div><div class="small" style="margin-top:5px">ДВИЖЕНИЕ</div></div>
 <div style="text-align:center"><div class="stick" id="aimStick"><div class="knob" id="aimKnob"></div></div><div class="small" style="margin-top:5px">ПРИЦЕЛ / ОГОНЬ</div></div>
 </div><button id="back" style="width:100%">В МЕНЮ</button>
+</section>
+<section id="settingsScreen" class="screen hidden">
+<h2>⚙️ Настройки</h2>
+<div class="panel">
+  <div style="font-weight:900;margin-bottom:8px">🖥️ Управление на компьютере</div>
+  <label style="display:flex;align-items:center;gap:10px;font-weight:800;cursor:pointer">
+    <input id="computerControlsToggle" type="checkbox" style="width:22px;height:22px;accent-color:#ffd45a">
+    Включить управление на компьютере
+  </label>
+  <p class="small" style="margin-bottom:0">W A S D или стрелки — движение · Мышь — прицеливание · Левая кнопка мыши — выстрел · Пробел — атака. Если выключено, остаётся управление джойстиками.</p>
+  <div id="computerControlsStatus" class="small" style="margin-top:8px"></div>
+</div>
+<button class="backHome">← НАЗАД</button>
 </section>
 <section id="shopScreen" class="screen hidden">
 <h2>🛒 Магазин KILLKA</h2>
@@ -130,7 +144,10 @@ const f=()=>{const base=fighters.find(x=>x.id===chosen)||fighters[0];const level
 function persist(){localStorage.setItem('kbAutoSave',JSON.stringify(save));refresh()}
 function rankDetails(){const pts=Math.max(0,Number(save.rankPoints)||0);const tiers=[['Бронза I',0],['Бронза II',100],['Бронза III',200],['Серебро I',300],['Серебро II',400],['Серебро III',500],['Золото I',600],['Золото II',700],['Золото III',800],['Алмаз I',900],['Алмаз II',1000],['Алмаз III',1100],['Мифический',1200],['Легендарный',1300]];let idx=0;for(let i=0;i<tiers.length;i++)if(pts>=tiers[i][1])idx=i;const next=tiers[idx+1];return {name:tiers[idx][0],points:pts,progress:next?Math.max(0,Math.min(100,(pts-tiers[idx][1])/(next[1]-tiers[idx][1])*100)):100,next:next?next[1]:null}}
 function refresh(){ $('coins').textContent=save.coins;$('trophies').textContent=save.trophies;$('progress').style.width=Math.min(100,save.trophies/500*100)+'%';$('progressText').textContent=save.trophies+' / 500 кубков';const r=rankDetails();$('rankInfo').textContent=r.name+' · '+r.points+' очков';$('rankProgress').style.width=r.progress+'%'}
-function show(id){['home','modeRevealScreen','fighterSelectScreen','countdownScreen','arenaScreen','shopScreen','upgradeScreen','roadScreen','boxScreen','endScreen'].forEach(x=>$(x).classList.add('hidden'));$(id).classList.remove('hidden')}
+function show(id){['home','modeRevealScreen','fighterSelectScreen','countdownScreen','arenaScreen','settingsScreen','shopScreen','upgradeScreen','roadScreen','boxScreen','endScreen'].forEach(x=>$(x).classList.add('hidden'));$(id).classList.remove('hidden')}
+let computerControlsEnabled=localStorage.getItem('kbComputerControls')==='true';
+function refreshComputerControlsSetting(){const input=$('computerControlsToggle');if(input)input.checked=computerControlsEnabled;$('computerControlsStatus').textContent=computerControlsEnabled?'Управление с клавиатуры и мыши включено.':'Управление с клавиатуры и мыши выключено.';}
+
 function renderFighters(){$('fighters').innerHTML=fighters.map(x=>`<button class="fighter ${chosen===x.id?'active':''}" data-f="${x.id}"><span class="face">${x.emoji}</span><b>${x.name}</b><div class="small">${save.unlocked.includes(x.id)?'Доступен':'🔒 Закрыт'}</div></button>`).join('');document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{let id=b.dataset.f;if(!save.unlocked.includes(id)){$('fighterInfo').textContent='Этот боец пока заблокирован.';return}chosen=id;renderFighters()});let x=f();$('fighterInfo').textContent=`${x.name}: ❤️ ${x.hp} · 🔫 3 патр. · Урон ${x.damage}`}
 function openModeSelect(){show('home')}
 function playSelectedMode(){
@@ -202,7 +219,7 @@ const canvas=$('field'),ctx=canvas.getContext('2d');
 function circle(x,y,r,color){ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill()}
 function damageOwnSafe(amount){const now=performance.now();if(now<ownSafeShieldUntil||ownSafeHP<=0)return;ownSafeHP=Math.max(0,ownSafeHP-amount);if(ownSafeNextShield>0&&ownSafeHP<=ownSafeNextShield){ownSafeHP=ownSafeNextShield;ownSafeShieldUntil=now+10000;ownSafeNextShield-=187.5;$('status').textContent='🛡️ Твой сейф активировал щит на 10 секунд!';}}
 function damageSafe(amount){const now=performance.now();if(now<safeShieldUntil||safeHP<=0)return;safeHP=Math.max(0,safeHP-amount);if(safeNextShield>0&&safeHP<=safeNextShield){safeHP=safeNextShield;safeShieldUntil=now+10000;safeNextShield-=187.5;$('status').textContent='🛡️ Сейф активировал щит на 10 секунд!';}}
-function loop(now){if(!running)return;let dt=Math.min(2,(now-last)/16.67);last=now;player.x=Math.max(22,Math.min(578,player.x+move.x*3.2*dt));player.y=Math.max(22,Math.min(578,player.y+move.y*3.2*dt));
+function loop(now){if(!running)return;let dt=Math.min(2,(now-last)/16.67);last=now;updateKeyboardMove();player.x=Math.max(22,Math.min(578,player.x+move.x*3.2*dt));player.y=Math.max(22,Math.min(578,player.y+move.y*3.2*dt));
 ctx.clearRect(0,0,600,600);ctx.fillStyle='#579b55';ctx.fillRect(0,0,600,600);ctx.strokeStyle='#70ad68';ctx.lineWidth=2;for(let x=0;x<600;x+=60){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,600);ctx.stroke();ctx.beginPath();ctx.moveTo(0,x);ctx.lineTo(600,x);ctx.stroke()}
 if(mode==='gems'){circle(gem.x,gem.y,25,'#8b4bc4');ctx.fillStyle='#fff';ctx.font='bold 16px sans-serif';ctx.textAlign='center';ctx.fillText('💎',gem.x,gem.y+6)}
 
@@ -350,8 +367,31 @@ function pad(stick,knob,type){let active=false,id=null;function update(e){let r=
 function end(){if(!active)return;active=false;try{stick.releasePointerCapture(id)}catch(e){}knob.style.transform='';if(type==='move')move={x:0,y:0};else{aiming=false;if(running)shoot()}}
 stick.addEventListener('pointerdown',e=>{if(!running)return;active=true;id=e.pointerId;stick.setPointerCapture(id);update(e)});stick.addEventListener('pointermove',e=>{if(active)update(e)});stick.addEventListener('pointerup',end);stick.addEventListener('pointercancel',end)}
 pad($('moveStick'),$('moveKnob'),'move');pad($('aimStick'),$('aimKnob'),'aim');
+// Управление на компьютере: WASD/стрелки, мышь для прицела и ЛКМ для выстрела.
+const pressedKeys=new Set();
+function updateKeyboardMove(){
+  const left=pressedKeys.has('a')||pressedKeys.has('arrowleft');
+  const right=pressedKeys.has('d')||pressedKeys.has('arrowright');
+  const up=pressedKeys.has('w')||pressedKeys.has('arrowup');
+  const down=pressedKeys.has('s')||pressedKeys.has('arrowdown');
+  let x=(right?1:0)-(left?1:0),y=(down?1:0)-(up?1:0),len=Math.hypot(x,y);
+  if(len){move={x:x/len,y:y/len};}else if(!document.querySelector('.stick:active')){move={x:0,y:0};}
+}
+window.addEventListener('keydown',e=>{
+  const k=e.key.toLowerCase();
+  if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();
+  if(computerControlsEnabled&&['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(k)){pressedKeys.add(k);updateKeyboardMove();}
+  if(computerControlsEnabled&&k===' '&&running){e.preventDefault();shoot();}
+});
+window.addEventListener('keyup',e=>{pressedKeys.delete(e.key.toLowerCase());if(computerControlsEnabled)updateKeyboardMove();});
+window.addEventListener('blur',()=>{pressedKeys.clear();move={x:0,y:0};});
+const field=$('field');
+function aimWithMouse(e){const r=field.getBoundingClientRect(),scaleX=600/r.width,scaleY=600/r.height,mx=(e.clientX-r.left)*scaleX,my=(e.clientY-r.top)*scaleY,dx=mx-player.x,dy=my-player.y,len=Math.hypot(dx,dy);if(len>2){aim={x:dx/len,y:dy/len};aiming=true;}}
+field.addEventListener('pointermove',e=>{if(computerControlsEnabled&&e.pointerType==='mouse'&&running)aimWithMouse(e)});
+field.addEventListener('pointerdown',e=>{if(computerControlsEnabled&&e.pointerType==='mouse'&&e.button===0&&running){e.preventDefault();aimWithMouse(e);shoot();}});
+field.addEventListener('contextmenu',e=>e.preventDefault());
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{selectedMode=b.dataset.mode;document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('active',x===b))});$('playSelectedMode').onclick=playSelectedMode;$('continueToFighters').onclick=()=>{if(rankedRun)beginRankedCountdown();else start()};$('cancelModeReveal').onclick=()=>show('home');$('startFight').onclick=()=>{if(countdownTimer)clearInterval(countdownTimer);countdownTimer=null;chosen=rankedChosen;start()};$('cancelCountdown').onclick=()=>{if(countdownTimer)clearInterval(countdownTimer);countdownTimer=null;show('home')};$('backToModes').onclick=()=>{if(countdownTimer)clearInterval(countdownTimer);countdownTimer=null;show('home')};$('again').onclick=openModeSelect;$('back').onclick=()=>{if(knockoutNextTimer){clearTimeout(knockoutNextTimer);knockoutNextTimer=null}knockoutMatchActive=false;running=false;reloading=false;reloadToken++;move={x:0,y:0};renderFighters();show('home')};document.querySelectorAll('.backHome').forEach(b=>b.onclick=()=>show('home'));
-$('shop').onclick=()=>show('shopScreen');$('road').onclick=()=>{drawRoad();show('roadScreen')};$('boxes').onclick=()=>show('boxScreen');
+$('shop').onclick=()=>show('shopScreen');$('settings').onclick=()=>{refreshComputerControlsSetting();show('settingsScreen')};$('computerControlsToggle').onchange=e=>{computerControlsEnabled=e.target.checked;localStorage.setItem('kbComputerControls',String(computerControlsEnabled));if(!computerControlsEnabled){pressedKeys.clear();move={x:0,y:0};aiming=false;}refreshComputerControlsSetting();};$('road').onclick=()=>{drawRoad();show('roadScreen')};$('boxes').onclick=()=>show('boxScreen');
 
 function buyWithCoins(cost, reward, messageId){
   if(save.coins<cost){if(messageId)$(messageId).textContent='Не хватает монет!';return false}
