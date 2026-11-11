@@ -36,9 +36,11 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:1/1;background:#579b55;
 <button class="mode" data-mode="knockout"><span>💥</span><b>Нокаут</b><small>Победи 3 противников</small></button>
 <button class="mode" data-mode="showdown"><span>☠️</span><b>Столкновение</b><small>Победи 10 врагов</small></button>
 <button class="mode" data-mode="heist"><span>💰</span><b>Ограбление</b><small>Сломай сейф</small></button>
+<button class="mode" data-mode="ranked"><span>🏅</span><b>Ранговый бой</b><small>Победи 5 врагов и поднимай ранг</small></button>
 </div></div>
 <div class="panel"><h2>Выбор бойца</h2><div id="fighters" class="row"></div><div id="fighterInfo" class="small" style="margin-top:8px"></div><button id="play" class="active" style="width:100%;margin-top:12px">▶ ИГРАТЬ</button></div>
 <div class="row"><button id="shop" style="flex:1">🛒 МАГАЗИН</button><button id="road" style="flex:1">🏆 ДОРОГА СЛАВЫ</button><button id="boxes" style="flex:1">🎁 ЯЩИКИ</button><button id="upgrades" style="flex:1">⚡ ПРОКАЧКА</button></div>
+<div class="panel" id="rankPanel"><div class="gold" style="font-weight:bold">🏅 Ранговый путь</div><div id="rankInfo" style="font-weight:900;margin-top:6px">Бронза I · 0 очков</div><div class="bar" style="margin:8px 0"><div id="rankProgress" style="width:0%;background:#c58cff"></div></div><div class="small">Победа в ранговом бою: +25 очков · Поражение: −10 очков</div></div>
 <div class="panel"><div class="gold" style="font-weight:bold">Твои достижения</div><div class="bar" style="margin-top:8px"><div id="progress"></div></div><div class="small" id="progressText"></div></div>
 </section>
 <section id="arenaScreen" class="screen hidden">
@@ -86,8 +88,8 @@ const fighters=[
 {id:'brali',name:'Брали',emoji:'🌀',hp:125,damage:35,reload:1200,range:220,spread:.55},
 {id:'crow',name:'Ворон',emoji:'🐦‍⬛',hp:100,damage:42,reload:1250,range:245,spread:.28}
 ];
-const modes={gems:{name:'ЗАХВАТ КРИСТАЛЛОВ',goal:'Собери 10 кристаллов',icon:'💎'},knockout:{name:'НОКАУТ',goal:'Победи 3 противников',icon:'💥'},showdown:{name:'СТОЛКНОВЕНИЕ',goal:'Победи 10 противников',icon:'☠️'},heist:{name:'ОГРАБЛЕНИЕ',goal:'Уничтожь сейф врага',icon:'💰'}};
-let save={coins:100,trophies:0,claimed:[],unlocked:['colt'],upgrades:{}};try{save={...save,...JSON.parse(localStorage.getItem('kbAutoSave')||'{}')}}catch(e){}
+const modes={gems:{name:'ЗАХВАТ КРИСТАЛЛОВ',goal:'Собери 10 кристаллов',icon:'💎'},knockout:{name:'НОКАУТ',goal:'Победи 3 противников',icon:'💥'},showdown:{name:'СТОЛКНОВЕНИЕ',goal:'Победи 10 противников',icon:'☠️'},heist:{name:'ОГРАБЛЕНИЕ',goal:'Уничтожь сейф врага',icon:'💰'},ranked:{name:'РАНГОВЫЙ БОЙ',goal:'Победи 5 противников',icon:'🏅'}};
+let save={coins:100,trophies:0,rankPoints:0,claimed:[],unlocked:['colt'],upgrades:{}};try{save={...save,...JSON.parse(localStorage.getItem('kbAutoSave')||'{}')}}catch(e){}
 if(!Array.isArray(save.claimed))save.claimed=[];if(!Array.isArray(save.unlocked))save.unlocked=['colt'];if(!save.upgrades||typeof save.upgrades!=='object')save.upgrades={};
 // Одноразовая компенсация за старые награды по 15 монет.
 if(!save.trophyRewardFixV1){
@@ -108,17 +110,18 @@ fighters.forEach(x=>{let n=Number(save.upgrades[x.id]||0);save.upgrades[x.id]=Ma
 let chosen='colt',mode='gems',running=false,reloading=false,ammo=3,hp=100,player={x:300,y:300},enemies=[],allies=[],allyShots=[],shots=[],enemyShots=[],effects=[],puddles=[],move={x:0,y:0},aim={x:1,y:0},aiming=false,last=0,reloadStart=0,reloadToken=0,raf=0,crystals=0,goals=0,safeHP=750,ownSafeHP=750,safeShieldUntil=0,safeNextShield=562.5,gem={x:300,y:300};
 const f=()=>{const base=fighters.find(x=>x.id===chosen)||fighters[0];const level=save.upgrades[base.id]||0;const nerf=base.id==='crow'?.2:1;return {...base,hp:Math.round(base.hp*(1+level*.04)),damage:Math.round(base.damage*(1+level*.05)*.6*nerf)}};
 function persist(){localStorage.setItem('kbAutoSave',JSON.stringify(save));refresh()}
-function refresh(){$('coins').textContent=save.coins;$('trophies').textContent=save.trophies;$('progress').style.width=Math.min(100,save.trophies/500*100)+'%';$('progressText').textContent=save.trophies+' / 500 кубков'}
+function rankDetails(){const pts=Math.max(0,Number(save.rankPoints)||0);const tiers=[['Бронза I',0],['Бронза II',50],['Бронза III',100],['Серебро I',150],['Серебро II',200],['Серебро III',250],['Золото I',300],['Золото II',375],['Золото III',450],['Алмаз I',525],['Алмаз II',625],['Алмаз III',725],['Мифический',850],['Легендарный',1000]];let idx=0;for(let i=0;i<tiers.length;i++)if(pts>=tiers[i][1])idx=i;const next=tiers[idx+1];return {name:tiers[idx][0],points:pts,progress:next?Math.max(0,Math.min(100,(pts-tiers[idx][1])/(next[1]-tiers[idx][1])*100)):100,next:next?next[1]:null}}
+function refresh(){ $('coins').textContent=save.coins;$('trophies').textContent=save.trophies;$('progress').style.width=Math.min(100,save.trophies/500*100)+'%';$('progressText').textContent=save.trophies+' / 500 кубков';const r=rankDetails();$('rankInfo').textContent=r.name+' · '+r.points+' очков';$('rankProgress').style.width=r.progress+'%'}
 function show(id){['home','arenaScreen','shopScreen','upgradeScreen','roadScreen','boxScreen','endScreen'].forEach(x=>$(x).classList.add('hidden'));$(id).classList.remove('hidden')}
 function renderFighters(){$('fighters').innerHTML=fighters.map(x=>`<button class="fighter ${chosen===x.id?'active':''}" data-f="${x.id}"><span class="face">${x.emoji}</span><b>${x.name}</b><div class="small">${save.unlocked.includes(x.id)?'Доступен':'🔒 Закрыт'}</div></button>`).join('');document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{let id=b.dataset.f;if(!save.unlocked.includes(id)){$('fighterInfo').textContent='Этот боец пока заблокирован.';return}chosen=id;renderFighters()});let x=f();$('fighterInfo').textContent=`${x.name}: ❤️ ${x.hp} · 🔫 3 патр. · Урон ${x.damage}`}
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('active',x===b))});
-function objective(){if(mode==='gems')return `💎 ${crystals}/10`;if(mode==='knockout')return `💥 ${3-enemies.filter(e=>e.hp>0).length}/3`;if(mode==='heist')return `💰 Вражеский сейф ${Math.max(0,Math.ceil(safeHP))}/750 · 🛡️ Твой ${Math.max(0,Math.ceil(ownSafeHP))}/750${performance.now()<safeShieldUntil?' 🛡️':''}`;return `☠️ ${10-enemies.filter(e=>e.hp>0).length}/10`}
+function objective(){if(mode==='gems')return `💎 ${crystals}/10`;if(mode==='knockout')return `💥 ${3-enemies.filter(e=>e.hp>0).length}/3`;if(mode==='ranked')return `🏅 ${5-enemies.filter(e=>e.hp>0).length}/5`;if(mode==='heist')return `💰 Вражеский сейф ${Math.max(0,Math.ceil(safeHP))}/750 · 🛡️ Твой ${Math.max(0,Math.ceil(ownSafeHP))}/750${performance.now()<safeShieldUntil?' 🛡️':''}`;return `☠️ ${10-enemies.filter(e=>e.hp>0).length}/10`}
 function hud(){$('ammo').textContent=ammo+'/3';$('hp').textContent=Math.max(0,Math.ceil(hp));$('healthbar').style.width=Math.max(0,hp/f().hp*100)+'%';$('objective').textContent=objective()}
 function start(){chosen=save.unlocked.includes(chosen)?chosen:'colt';running=true;reloading=false;reloadToken++;aiming=false;move={x:0,y:0};ammo=3;hp=f().hp;player={x:300,y:300};allies=[];allyShots=[];shots=[];enemyShots=[];effects=[];puddles=[];crystals=0;goals=0;safeHP=750;ownSafeHP=750;safeShieldUntil=0;safeNextShield=562.5;gem={x:300,y:300};
-let count=mode==='showdown'?10:mode==='knockout'?3:mode==='gems'?6:5;
-enemies=Array.from({length:count},(_,i)=>{let a=i*Math.PI*2/count;return{x:300+Math.cos(a)*220,y:300+Math.sin(a)*220,hp:55,max:55,cd:Math.random()*80,style:i%3,strafe:i%2?1:-1}});
-if(mode==='knockout'||mode==='gems'||mode==='heist'){allies=[{x:260,y:345,hp:100,max:100,cd:25},{x:340,y:345,hp:100,max:100,cd:55}];}
-$('arenaName').textContent=modes[mode].icon+' '+modes[mode].name+' — '+f().name;$('status').textContent=modes[mode].goal+((mode==='knockout'||mode==='gems'||mode==='heist')?' · 2 союзника самостоятельно ищут и атакуют врагов!':'')+' · Левый джойстик — движение, правый — прицел и выстрел.';$('reloadLabel').textContent='Готов к бою';$('reloadbar').style.width='0%';hud();show('arenaScreen');last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop)}
+let count=mode==='showdown'?10:mode==='knockout'?3:mode==='ranked'?5:mode==='gems'?6:5;
+enemies=Array.from({length:count},(_,i)=>{let a=i*Math.PI*2/count;const enemyHp=mode==='ranked'?75:55;return{x:300+Math.cos(a)*220,y:300+Math.sin(a)*220,hp:enemyHp,max:enemyHp,cd:Math.random()*80,style:i%3,strafe:i%2?1:-1}});
+if(mode==='knockout'||mode==='gems'||mode==='heist'||mode==='ranked'){allies=[{x:260,y:345,hp:100,max:100,cd:25},{x:340,y:345,hp:100,max:100,cd:55}];}
+$('arenaName').textContent=modes[mode].icon+' '+modes[mode].name+' — '+f().name;$('status').textContent=modes[mode].goal+((mode==='knockout'||mode==='gems'||mode==='heist'||mode==='ranked')?' · 2 союзника самостоятельно ищут и атакуют врагов!':'')+' · Левый джойстик — движение, правый — прицел и выстрел.';$('reloadLabel').textContent='Готов к бою';$('reloadbar').style.width='0%';hud();show('arenaScreen');last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop)}
 function reload(){if(!running||reloading||ammo===3)return;reloading=true;const token=++reloadToken;reloadStart=performance.now();const duration=f().reload;$('reloadLabel').textContent='Автоперезарядка…';function tick(){if(!running||!reloading||token!==reloadToken)return;let p=Math.min(100,(performance.now()-reloadStart)/duration*100);$('reloadbar').style.width=p+'%';if(p<100){requestAnimationFrame(tick);return}ammo=3;reloading=false;hud();$('reloadLabel').textContent='Заряжено!';$('reloadbar').style.width='0%'}requestAnimationFrame(tick)}
 function shoot(){
 if(!running)return;if(reloading||ammo<=0){reload();return}
@@ -158,7 +161,7 @@ if(x.id==='colt'){
   for(let i=0;i<3;i++)addShot(a+(i-1)*x.spread,x.damage/3,0,{poison:true});
 }else{
   const count=x.id==='shelly'?6:1;
-  for(let i=0;i<count;i++)addShot(a+(i-(count-1)/2)*x.spread,x.damage/count);
+  for(let i=0;i<count;i++)addShot(a+(i-(count-1)/2)*x.spread,x.damage/count,0,{pierce:x.id==='jessie'});
 }
 hud();$('status').textContent='Атака!';if(ammo===0)reload()
 }
@@ -192,7 +195,7 @@ if(mode==='gems'||mode==='heist'){
 }
 let alive=enemies.filter(e=>e.hp>0);
 // В нокауте союзники действуют самостоятельно: ищут врагов, выбирают позицию и атакуют.
-if(mode==='knockout'||mode==='gems'||mode==='heist'){
+if(mode==='knockout'||mode==='gems'||mode==='heist'||mode==='ranked'){
   for(let i=0;i<allies.length;i++){
     const ally=allies[i];
     const target=enemies.filter(e=>e.hp>0).sort((a,b)=>Math.hypot(a.x-ally.x,a.y-ally.y)-Math.hypot(b.x-ally.x,b.y-ally.y))[0];
@@ -297,7 +300,7 @@ effects=effects.filter(e=>e.life>0);
 for(let s of enemyShots){s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;if(s.targetSafe&&mode==='heist'&&Math.hypot(s.x-87,s.y-300)<30){damageOwnSafe(18);s.life=0}else if(Math.hypot(s.x-player.x,s.y-player.y)<18){hp-=.495*dt*4;s.life=0}circle(s.x,s.y,5,'#ff9b72')}enemyShots=enemyShots.filter(s=>s.life>0);
 if(mode==='gems'&&Math.hypot(player.x-gem.x,player.y-gem.y)<35&&crystals<10){crystals++;gem={x:55+Math.random()*490,y:55+Math.random()*490};$('status').textContent='Кристалл подобран! 💎';}
 
-if(mode==='knockout'||mode==='gems'||mode==='heist'){
+if(mode==='knockout'||mode==='gems'||mode==='heist'||mode==='ranked'){
   for(const ally of allies){
     circle(ally.x,ally.y,17,'#20b8a5');circle(ally.x,ally.y-3,7,'#d5fff4');
     ctx.fillStyle='#102b3a';ctx.fillRect(ally.x-16,ally.y-25,32,4);
@@ -309,7 +312,7 @@ if(aiming){ctx.save();ctx.translate(player.x,player.y);ctx.rotate(Math.atan2(aim
 circle(player.x,player.y,17,'#2878e8');circle(player.x+aim.x*10,player.y+aim.y*10,6,'#ffe18a');hud();
 let won=mode==='gems'?crystals>=10:mode==='heist'?safeHP<=0:!enemies.some(e=>e.hp>0);
 if(hp<=0||(mode==='heist'&&ownSafeHP<=0)){finish(false);return}if(won){finish(true);return}raf=requestAnimationFrame(loop)}
-function finish(win){running=false;reloading=false;reloadToken++;if(win){save.trophies+=10;save.coins+=25;persist();$('endTitle').textContent='🏆 ПОБЕДА!';$('endMessage').textContent='Цель режима выполнена! +10 кубков и +25 монет.'}else{$('endTitle').textContent='БИТВА ОКОНЧЕНА';$('endMessage').textContent='Попробуй ещё раз!'}show('endScreen')}
+function finish(win){running=false;reloading=false;reloadToken++;if(mode==='ranked'){const change=win?25:-10;save.rankPoints=Math.max(0,(Number(save.rankPoints)||0)+change);if(win){save.trophies+=10;save.coins+=25;$('endTitle').textContent='🏅 РАНГОВАЯ ПОБЕДА!';$('endMessage').textContent='Команда победила! +25 ранговых очков, +10 кубков и +25 монет. Текущий ранг: '+rankDetails().name+'.'}else{$('endTitle').textContent='РАНГОВОЕ ПОРАЖЕНИЕ';$('endMessage').textContent='В этот раз не получилось. −10 ранговых очков. Текущий ранг: '+rankDetails().name+'.'}persist();}else if(win){save.trophies+=10;save.coins+=25;persist();$('endTitle').textContent='🏆 ПОБЕДА!';$('endMessage').textContent='Цель режима выполнена! +10 кубков и +25 монет.'}else{$('endTitle').textContent='БИТВА ОКОНЧЕНА';$('endMessage').textContent='Попробуй ещё раз!'}show('endScreen')}
 function pad(stick,knob,type){let active=false,id=null;function update(e){let r=stick.getBoundingClientRect(),dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2),len=Math.hypot(dx,dy),max=35;if(len>max){dx=dx/len*max;dy=dy/len*max}knob.style.transform=`translate(${dx}px,${dy}px)`;let vx=dx/max,vy=dy/max;if(type==='move')move={x:vx,y:vy};else if(Math.hypot(vx,vy)>.15){aim={x:vx/Math.hypot(vx,vy),y:vy/Math.hypot(vx,vy)};aiming=true}}
 function end(){if(!active)return;active=false;try{stick.releasePointerCapture(id)}catch(e){}knob.style.transform='';if(type==='move')move={x:0,y:0};else{aiming=false;if(running)shoot()}}
 stick.addEventListener('pointerdown',e=>{if(!running)return;active=true;id=e.pointerId;stick.setPointerCapture(id);update(e)});stick.addEventListener('pointermove',e=>{if(active)update(e)});stick.addEventListener('pointerup',end);stick.addEventListener('pointercancel',end)}
