@@ -105,7 +105,7 @@ if(!save.trophyRewardFixV1){
   save.trophyRewardFixV1=true;
 }
 fighters.forEach(x=>{let n=Number(save.upgrades[x.id]||0);save.upgrades[x.id]=Math.max(0,Math.min(11,Number.isFinite(n)?Math.floor(n):0))});
-let chosen='colt',mode='gems',running=false,reloading=false,ammo=3,hp=100,player={x:300,y:300},enemies=[],shots=[],enemyShots=[],effects=[],move={x:0,y:0},aim={x:1,y:0},aiming=false,last=0,reloadStart=0,reloadToken=0,raf=0,crystals=0,goals=0,safeHP=2000,safeShieldUntil=0,safeNextShield=1500,gem={x:300,y:300};
+let chosen='colt',mode='gems',running=false,reloading=false,ammo=3,hp=100,player={x:300,y:300},enemies=[],shots=[],enemyShots=[],effects=[],puddles=[],move={x:0,y:0},aim={x:1,y:0},aiming=false,last=0,reloadStart=0,reloadToken=0,raf=0,crystals=0,goals=0,safeHP=2000,safeShieldUntil=0,safeNextShield=1500,gem={x:300,y:300};
 const f=()=>{const base=fighters.find(x=>x.id===chosen)||fighters[0];const level=save.upgrades[base.id]||0;const nerf=base.id==='crow'?.2:1;return {...base,hp:Math.round(base.hp*(1+level*.04)),damage:Math.round(base.damage*(1+level*.05)*.6*nerf)}};
 function persist(){localStorage.setItem('kbAutoSave',JSON.stringify(save));refresh()}
 function refresh(){$('coins').textContent=save.coins;$('trophies').textContent=save.trophies;$('progress').style.width=Math.min(100,save.trophies/500*100)+'%';$('progressText').textContent=save.trophies+' / 500 кубков'}
@@ -114,7 +114,7 @@ function renderFighters(){$('fighters').innerHTML=fighters.map(x=>`<button class
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('active',x===b))});
 function objective(){if(mode==='gems')return `💎 ${crystals}/10`;if(mode==='knockout')return `💥 ${3-enemies.filter(e=>e.hp>0).length}/3`;if(mode==='heist')return `💰 Сейф ${Math.max(0,Math.ceil(safeHP))}/2000${performance.now()<safeShieldUntil?' 🛡️':''}`;return `☠️ ${10-enemies.filter(e=>e.hp>0).length}/10`}
 function hud(){$('ammo').textContent=ammo+'/3';$('hp').textContent=Math.max(0,Math.ceil(hp));$('healthbar').style.width=Math.max(0,hp/f().hp*100)+'%';$('objective').textContent=objective()}
-function start(){chosen=save.unlocked.includes(chosen)?chosen:'colt';running=true;reloading=false;reloadToken++;aiming=false;move={x:0,y:0};ammo=3;hp=f().hp;player={x:300,y:300};shots=[];enemyShots=[];crystals=0;goals=0;safeHP=2000;safeShieldUntil=0;safeNextShield=1500;gem={x:300,y:300};
+function start(){chosen=save.unlocked.includes(chosen)?chosen:'colt';running=true;reloading=false;reloadToken++;aiming=false;move={x:0,y:0};ammo=3;hp=f().hp;player={x:300,y:300};shots=[];enemyShots=[];effects=[];puddles=[];crystals=0;goals=0;safeHP=2000;safeShieldUntil=0;safeNextShield=1500;gem={x:300,y:300};
 let count=mode==='showdown'?10:mode==='knockout'?3:mode==='gems'?6:5;
 enemies=Array.from({length:count},(_,i)=>{let a=i*Math.PI*2/count;return{x:300+Math.cos(a)*220,y:300+Math.sin(a)*220,hp:55,max:55,cd:Math.random()*80,style:i%3,strafe:i%2?1:-1}});
 $('arenaName').textContent=modes[mode].icon+' '+modes[mode].name+' — '+f().name;$('status').textContent=modes[mode].goal+' · Левый джойстик — движение, правый — прицел и выстрел.';$('reloadLabel').textContent='Готов к бою';$('reloadbar').style.width='0%';hud();show('arenaScreen');last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop)}
@@ -151,7 +151,8 @@ if(x.id==='colt'){
   for(const e of enemies)if(e.hp>0&&Math.hypot(e.x-player.x,e.y-player.y)<=48)e.hp-=x.damage;
   effects.push({x:(oldX+player.x)/2,y:(oldY+player.y)/2,life:14,r:34});
 }else if(x.id==='brali'){
-  for(let i=0;i<5;i++)addShot(a+(i-2)*.16,x.damage/5,0,{pierce:true});
+  // Брали бросает бутылку: во время полёта она не наносит урон.
+  addShot(a,0,0,{bottle:true});
 }else if(x.id==='crow'){
   for(let i=0;i<3;i++)addShot(a+(i-1)*x.spread,x.damage/3,0,{poison:true});
 }else{
@@ -208,6 +209,18 @@ circle(e.x,e.y,15,e.style===0?'#c64b43':e.style===1?'#9b55c9':'#d17a35');circle(
 for(let s of shots){
 if(s.wait>0){s.wait-=dt;continue}
 s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;
+if(s.bottle){
+  if(s.life<=0){
+    const radius=44;
+    puddles.push({x:s.x,y:s.y,r:radius,life:180,maxLife:180,dps:2});
+    effects.push({x:s.x,y:s.y,life:14,r:radius});
+    s.life=0;
+  }else{
+    circle(s.x,s.y,8,'#b9e36a');
+    circle(s.x-2,s.y-3,3,'#eaffb0');
+  }
+  continue;
+}
 if(s.explosive){
   if(s.life<=0){
     const radius=48;
@@ -223,6 +236,19 @@ if(mode==='heist'&&Math.hypot(512-s.x,300-s.y)<55){damageSafe(s.damage);s.life=0
 circle(s.x,s.y,s.r,'#ffe16b')
 }
 shots=shots.filter(s=>s.life>0);
+// Лужа Брали наносит небольшой периодический урон только после приземления бутылки.
+for(const puddle of puddles){
+  puddle.life-=dt;
+  for(const e of alive){
+    if(e.hp>0&&Math.hypot(e.x-puddle.x,e.y-puddle.y)<=puddle.r){
+      e.hp-=puddle.dps*dt/60;
+    }
+  }
+  ctx.fillStyle='rgba(170,220,75,'+Math.min(.42,.18+puddle.life/puddle.maxLife*.2)+')';
+  ctx.beginPath();ctx.ellipse(puddle.x,puddle.y,puddle.r,puddle.r*.72,0,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='rgba(225,255,150,.7)';ctx.lineWidth=2;ctx.stroke();
+}
+puddles=puddles.filter(p=>p.life>0);
 for(let e of effects){e.life-=dt;ctx.strokeStyle='rgba(255,210,80,'+Math.max(0,e.life/14)+')';ctx.lineWidth=5;ctx.beginPath();ctx.arc(e.x,e.y,e.r*(1+(14-e.life)/14*.25),0,Math.PI*2);ctx.stroke()}
 effects=effects.filter(e=>e.life>0);
 for(let s of enemyShots){s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;if(Math.hypot(s.x-player.x,s.y-player.y)<18){hp-=.495*dt*4;s.life=0}circle(s.x,s.y,5,'#ff9b72')}enemyShots=enemyShots.filter(s=>s.life>0);
