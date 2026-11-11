@@ -84,7 +84,23 @@ const fighters=[
 ];
 const modes={gems:{name:'ЗАХВАТ КРИСТАЛЛОВ',goal:'Собери 10 кристаллов',icon:'💎'},knockout:{name:'НОКАУТ',goal:'Победи 3 противников',icon:'💥'},showdown:{name:'СТОЛКНОВЕНИЕ',goal:'Победи 10 противников',icon:'☠️'},heist:{name:'ОГРАБЛЕНИЕ',goal:'Уничтожь сейф врага',icon:'💰'}};
 let save={coins:100,trophies:0,claimed:[],unlocked:['colt'],upgrades:{}};try{save={...save,...JSON.parse(localStorage.getItem('kbAutoSave')||'{}')}}catch(e){}
-if(!Array.isArray(save.claimed))save.claimed=[];if(!Array.isArray(save.unlocked))save.unlocked=['colt'];if(!save.upgrades||typeof save.upgrades!=='object')save.upgrades={};fighters.forEach(x=>{let n=Number(save.upgrades[x.id]||0);save.upgrades[x.id]=Math.max(0,Math.min(11,Number.isFinite(n)?Math.floor(n):0))});
+if(!Array.isArray(save.claimed))save.claimed=[];if(!Array.isArray(save.unlocked))save.unlocked=['colt'];if(!save.upgrades||typeof save.upgrades!=='object')save.upgrades={};
+// Одноразовая компенсация за старые награды по 15 монет.
+if(!save.trophyRewardFixV1){
+  const previouslyClaimed=save.claimed.filter(n=>Number.isInteger(n)&&n>=2000&&n<=100000&&n%1000===0);
+  save.coins+=(previouslyClaimed.length*485);
+  previouslyClaimed.filter(n=>n%20000===0).forEach(()=>{
+    const locked=fighters.filter(x=>!save.unlocked.includes(x.id));
+    if(locked.length){
+      const prize=locked[Math.floor(Math.random()*locked.length)];
+      save.unlocked.push(prize.id);
+    }else{
+      save.coins+=3000;
+    }
+  });
+  save.trophyRewardFixV1=true;
+}
+fighters.forEach(x=>{let n=Number(save.upgrades[x.id]||0);save.upgrades[x.id]=Math.max(0,Math.min(11,Number.isFinite(n)?Math.floor(n):0))});
 let chosen='colt',mode='gems',running=false,reloading=false,ammo=3,hp=100,player={x:300,y:300},enemies=[],shots=[],enemyShots=[],effects=[],move={x:0,y:0},aim={x:1,y:0},aiming=false,last=0,reloadStart=0,reloadToken=0,raf=0,crystals=0,goals=0,safeHP=100,gem={x:300,y:300};
 const f=()=>{const base=fighters.find(x=>x.id===chosen)||fighters[0];const level=save.upgrades[base.id]||0;return {...base,hp:Math.round(base.hp*(1+level*.04)),damage:Math.round(base.damage*(1+level*.05))}};
 function persist(){localStorage.setItem('kbAutoSave',JSON.stringify(save));refresh()}
