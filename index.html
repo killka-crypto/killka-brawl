@@ -80,7 +80,11 @@ const fighters=[
 {id:'dynamike',name:'Динамайк',emoji:'💣',hp:100,damage:48,reload:1400,range:220,spread:.12},
 {id:'bo',name:'Бо',emoji:'🏹',hp:125,damage:20,reload:1200,range:230,spread:.28},
 {id:'poco',name:'Поко',emoji:'🎸',hp:115,damage:26,reload:1250,range:185,spread:.48},
-{id:'darryl',name:'Дэррил',emoji:'🛢️',hp:150,damage:32,reload:1300,range:165,spread:.58}
+{id:'darryl',name:'Дэррил',emoji:'🛢️',hp:150,damage:32,reload:1300,range:165,spread:.58},
+{id:'jacky',name:'Джеки',emoji:'🦺',hp:175,damage:42,reload:1400,range:95,spread:.0},
+{id:'mortis',name:'Мортис',emoji:'🦇',hp:140,damage:48,reload:1300,range:145,spread:.0},
+{id:'brali',name:'Брали',emoji:'🌀',hp:125,damage:35,reload:1200,range:220,spread:.55},
+{id:'crow',name:'Ворон',emoji:'🐦‍⬛',hp:100,damage:42,reload:1250,range:245,spread:.28}
 ];
 const modes={gems:{name:'ЗАХВАТ КРИСТАЛЛОВ',goal:'Собери 10 кристаллов',icon:'💎'},knockout:{name:'НОКАУТ',goal:'Победи 3 противников',icon:'💥'},showdown:{name:'СТОЛКНОВЕНИЕ',goal:'Победи 10 противников',icon:'☠️'},heist:{name:'ОГРАБЛЕНИЕ',goal:'Уничтожь сейф врага',icon:'💰'}};
 let save={coins:100,trophies:0,claimed:[],unlocked:['colt'],upgrades:{}};try{save={...save,...JSON.parse(localStorage.getItem('kbAutoSave')||'{}')}}catch(e){}
@@ -136,6 +140,20 @@ if(x.id==='colt'){
       damage:x.damage/6,r:6,pierce:x.id==='poco'};
     shots.push(shot);
   }
+}else if(x.id==='jacky'){
+  const radius=78;
+  for(const e of enemies)if(e.hp>0&&Math.hypot(e.x-player.x,e.y-player.y)<=radius)e.hp-=x.damage;
+  effects.push({x:player.x,y:player.y,life:14,r:radius});
+}else if(x.id==='mortis'){
+  const oldX=player.x,oldY=player.y;
+  player.x=Math.max(22,Math.min(578,player.x+Math.cos(a)*72));
+  player.y=Math.max(22,Math.min(578,player.y+Math.sin(a)*72));
+  for(const e of enemies)if(e.hp>0&&Math.hypot(e.x-player.x,e.y-player.y)<=48)e.hp-=x.damage;
+  effects.push({x:(oldX+player.x)/2,y:(oldY+player.y)/2,life:14,r:34});
+}else if(x.id==='brali'){
+  for(let i=0;i<5;i++)addShot(a+(i-2)*.16,x.damage/5,0,{pierce:true});
+}else if(x.id==='crow'){
+  for(let i=0;i<3;i++)addShot(a+(i-1)*x.spread,x.damage/3,0,{poison:true});
 }else{
   const count=x.id==='shelly'?6:1;
   for(let i=0;i<count;i++)addShot(a+(i-(count-1)/2)*x.spread,x.damage/count);
@@ -150,7 +168,7 @@ ctx.clearRect(0,0,600,600);ctx.fillStyle='#579b55';ctx.fillRect(0,0,600,600);ctx
 if(mode==='gems'){circle(gem.x,gem.y,25,'#8b4bc4');ctx.fillStyle='#fff';ctx.font='bold 16px sans-serif';ctx.textAlign='center';ctx.fillText('💎',gem.x,gem.y+6)}
 
 if(mode==='heist'){ctx.fillStyle='#8a6b49';ctx.fillRect(475,255,75,90);ctx.fillStyle='#ffe17c';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.fillText('СЕЙФ',512,305);ctx.fillStyle='#222';ctx.fillRect(470,235,85,7);ctx.fillStyle='#69dc77';ctx.fillRect(470,235,85*safeHP/100,7)}
-let alive=enemies.filter(e=>e.hp>0);for(let e of alive){let dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1;e.x+=dx/d*.62*dt;e.y+=dy/d*.62*dt;e.cd-=dt;if(d<230&&e.cd<=0){enemyShots.push({x:e.x,y:e.y,vx:dx/d*3.4,vy:dy/d*3.4,life:75});e.cd=95+Math.random()*35}circle(e.x,e.y,15,'#b83d45');circle(e.x,e.y-3,7,'#ffcfaa');ctx.fillStyle='#18233b';ctx.fillRect(e.x-16,e.y-25,32,4);ctx.fillStyle='#6be17b';ctx.fillRect(e.x-16,e.y-25,32*e.hp/e.max,4)}
+let alive=enemies.filter(e=>e.hp>0);for(let e of alive){if(e.poisonUntil>now)e.hp-=e.poisonDps*dt;let dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1;e.x+=dx/d*.62*dt;e.y+=dy/d*.62*dt;e.cd-=dt;if(d<230&&e.cd<=0){enemyShots.push({x:e.x,y:e.y,vx:dx/d*3.4,vy:dy/d*3.4,life:75});e.cd=95+Math.random()*35}circle(e.x,e.y,15,'#b83d45');circle(e.x,e.y-3,7,'#ffcfaa');ctx.fillStyle='#18233b';ctx.fillRect(e.x-16,e.y-25,32,4);ctx.fillStyle='#6be17b';ctx.fillRect(e.x-16,e.y-25,32*e.hp/e.max,4)}
 for(let s of shots){
 if(s.wait>0){s.wait-=dt;continue}
 s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;
@@ -164,7 +182,7 @@ if(s.explosive){
   }else circle(s.x,s.y,s.r,'#ffe16b');
   continue;
 }
-for(let e of alive)if(Math.hypot(e.x-s.x,e.y-s.y)<20){e.hp-=s.damage;if(!s.pierce)s.life=0;if(mode==='heist'&&Math.hypot(512-s.x,300-s.y)<65)safeHP-=s.damage;if(!s.pierce)break}
+for(let e of alive)if(Math.hypot(e.x-s.x,e.y-s.y)<20){e.hp-=s.damage;if(s.poison){e.poisonUntil=performance.now()+1800;e.poisonDps=Math.max(1,s.damage*.18)}if(!s.pierce)s.life=0;if(mode==='heist'&&Math.hypot(512-s.x,300-s.y)<65)safeHP-=s.damage;if(!s.pierce)break}
 if(mode==='heist'&&Math.hypot(512-s.x,300-s.y)<55){safeHP-=s.damage;s.life=0}
 circle(s.x,s.y,s.r,'#ffe16b')
 }
