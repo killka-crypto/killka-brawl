@@ -105,20 +105,20 @@ if(!save.trophyRewardFixV1){
   save.trophyRewardFixV1=true;
 }
 fighters.forEach(x=>{let n=Number(save.upgrades[x.id]||0);save.upgrades[x.id]=Math.max(0,Math.min(11,Number.isFinite(n)?Math.floor(n):0))});
-let chosen='colt',mode='gems',running=false,reloading=false,ammo=3,hp=100,player={x:300,y:300},enemies=[],allies=[],allyShots=[],shots=[],enemyShots=[],effects=[],puddles=[],move={x:0,y:0},aim={x:1,y:0},aiming=false,last=0,reloadStart=0,reloadToken=0,raf=0,crystals=0,goals=0,safeHP=2000,safeShieldUntil=0,safeNextShield=1500,gem={x:300,y:300};
+let chosen='colt',mode='gems',running=false,reloading=false,ammo=3,hp=100,player={x:300,y:300},enemies=[],allies=[],allyShots=[],shots=[],enemyShots=[],effects=[],puddles=[],move={x:0,y:0},aim={x:1,y:0},aiming=false,last=0,reloadStart=0,reloadToken=0,raf=0,crystals=0,goals=0,safeHP=750,ownSafeHP=750,safeShieldUntil=0,safeNextShield=562.5,gem={x:300,y:300};
 const f=()=>{const base=fighters.find(x=>x.id===chosen)||fighters[0];const level=save.upgrades[base.id]||0;const nerf=base.id==='crow'?.2:1;return {...base,hp:Math.round(base.hp*(1+level*.04)),damage:Math.round(base.damage*(1+level*.05)*.6*nerf)}};
 function persist(){localStorage.setItem('kbAutoSave',JSON.stringify(save));refresh()}
 function refresh(){$('coins').textContent=save.coins;$('trophies').textContent=save.trophies;$('progress').style.width=Math.min(100,save.trophies/500*100)+'%';$('progressText').textContent=save.trophies+' / 500 кубков'}
 function show(id){['home','arenaScreen','shopScreen','upgradeScreen','roadScreen','boxScreen','endScreen'].forEach(x=>$(x).classList.add('hidden'));$(id).classList.remove('hidden')}
 function renderFighters(){$('fighters').innerHTML=fighters.map(x=>`<button class="fighter ${chosen===x.id?'active':''}" data-f="${x.id}"><span class="face">${x.emoji}</span><b>${x.name}</b><div class="small">${save.unlocked.includes(x.id)?'Доступен':'🔒 Закрыт'}</div></button>`).join('');document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{let id=b.dataset.f;if(!save.unlocked.includes(id)){$('fighterInfo').textContent='Этот боец пока заблокирован.';return}chosen=id;renderFighters()});let x=f();$('fighterInfo').textContent=`${x.name}: ❤️ ${x.hp} · 🔫 3 патр. · Урон ${x.damage}`}
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('active',x===b))});
-function objective(){if(mode==='gems')return `💎 ${crystals}/10`;if(mode==='knockout')return `💥 ${3-enemies.filter(e=>e.hp>0).length}/3`;if(mode==='heist')return `💰 Сейф ${Math.max(0,Math.ceil(safeHP))}/2000${performance.now()<safeShieldUntil?' 🛡️':''}`;return `☠️ ${10-enemies.filter(e=>e.hp>0).length}/10`}
+function objective(){if(mode==='gems')return `💎 ${crystals}/10`;if(mode==='knockout')return `💥 ${3-enemies.filter(e=>e.hp>0).length}/3`;if(mode==='heist')return `💰 Вражеский сейф ${Math.max(0,Math.ceil(safeHP))}/750 · 🛡️ Твой ${Math.max(0,Math.ceil(ownSafeHP))}/750${performance.now()<safeShieldUntil?' 🛡️':''}`;return `☠️ ${10-enemies.filter(e=>e.hp>0).length}/10`}
 function hud(){$('ammo').textContent=ammo+'/3';$('hp').textContent=Math.max(0,Math.ceil(hp));$('healthbar').style.width=Math.max(0,hp/f().hp*100)+'%';$('objective').textContent=objective()}
-function start(){chosen=save.unlocked.includes(chosen)?chosen:'colt';running=true;reloading=false;reloadToken++;aiming=false;move={x:0,y:0};ammo=3;hp=f().hp;player={x:300,y:300};allies=[];allyShots=[];shots=[];enemyShots=[];effects=[];puddles=[];crystals=0;goals=0;safeHP=2000;safeShieldUntil=0;safeNextShield=1500;gem={x:300,y:300};
+function start(){chosen=save.unlocked.includes(chosen)?chosen:'colt';running=true;reloading=false;reloadToken++;aiming=false;move={x:0,y:0};ammo=3;hp=f().hp;player={x:300,y:300};allies=[];allyShots=[];shots=[];enemyShots=[];effects=[];puddles=[];crystals=0;goals=0;safeHP=750;ownSafeHP=750;safeShieldUntil=0;safeNextShield=562.5;gem={x:300,y:300};
 let count=mode==='showdown'?10:mode==='knockout'?3:mode==='gems'?6:5;
 enemies=Array.from({length:count},(_,i)=>{let a=i*Math.PI*2/count;return{x:300+Math.cos(a)*220,y:300+Math.sin(a)*220,hp:55,max:55,cd:Math.random()*80,style:i%3,strafe:i%2?1:-1}});
-if(mode==='knockout'){allies=[{x:260,y:345,hp:100,max:100,cd:25},{x:340,y:345,hp:100,max:100,cd:55}];}
-$('arenaName').textContent=modes[mode].icon+' '+modes[mode].name+' — '+f().name;$('status').textContent=modes[mode].goal+(mode==='knockout'?' · 2 союзника самостоятельно ищут и атакуют врагов!':'')+' · Левый джойстик — движение, правый — прицел и выстрел.';$('reloadLabel').textContent='Готов к бою';$('reloadbar').style.width='0%';hud();show('arenaScreen');last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop)}
+if(mode==='knockout'||mode==='gems'||mode==='heist'){allies=[{x:260,y:345,hp:100,max:100,cd:25},{x:340,y:345,hp:100,max:100,cd:55}];}
+$('arenaName').textContent=modes[mode].icon+' '+modes[mode].name+' — '+f().name;$('status').textContent=modes[mode].goal+((mode==='knockout'||mode==='gems'||mode==='heist')?' · 2 союзника самостоятельно ищут и атакуют врагов!':'')+' · Левый джойстик — движение, правый — прицел и выстрел.';$('reloadLabel').textContent='Готов к бою';$('reloadbar').style.width='0%';hud();show('arenaScreen');last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop)}
 function reload(){if(!running||reloading||ammo===3)return;reloading=true;const token=++reloadToken;reloadStart=performance.now();const duration=f().reload;$('reloadLabel').textContent='Автоперезарядка…';function tick(){if(!running||!reloading||token!==reloadToken)return;let p=Math.min(100,(performance.now()-reloadStart)/duration*100);$('reloadbar').style.width=p+'%';if(p<100){requestAnimationFrame(tick);return}ammo=3;reloading=false;hud();$('reloadLabel').textContent='Заряжено!';$('reloadbar').style.width='0%'}requestAnimationFrame(tick)}
 function shoot(){
 if(!running)return;if(reloading||ammo<=0){reload();return}
@@ -165,12 +165,18 @@ hud();$('status').textContent='Атака!';if(ammo===0)reload()
 const canvas=$('field'),ctx=canvas.getContext('2d');
 
 function circle(x,y,r,color){ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill()}
-function damageSafe(amount){const now=performance.now();if(now<safeShieldUntil||safeHP<=0)return;safeHP=Math.max(0,safeHP-amount);if(safeNextShield>0&&safeHP<=safeNextShield){safeHP=safeNextShield;safeShieldUntil=now+10000;safeNextShield-=500;$('status').textContent='🛡️ Сейф активировал щит на 10 секунд!';}}
+function damageOwnSafe(amount){ownSafeHP=Math.max(0,ownSafeHP-amount)}
+function damageSafe(amount){const now=performance.now();if(now<safeShieldUntil||safeHP<=0)return;safeHP=Math.max(0,safeHP-amount);if(safeNextShield>0&&safeHP<=safeNextShield){safeHP=safeNextShield;safeShieldUntil=now+10000;safeNextShield-=187.5;$('status').textContent='🛡️ Сейф активировал щит на 10 секунд!';}}
 function loop(now){if(!running)return;let dt=Math.min(2,(now-last)/16.67);last=now;player.x=Math.max(22,Math.min(578,player.x+move.x*3.2*dt));player.y=Math.max(22,Math.min(578,player.y+move.y*3.2*dt));
 ctx.clearRect(0,0,600,600);ctx.fillStyle='#579b55';ctx.fillRect(0,0,600,600);ctx.strokeStyle='#70ad68';ctx.lineWidth=2;for(let x=0;x<600;x+=60){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,600);ctx.stroke();ctx.beginPath();ctx.moveTo(0,x);ctx.lineTo(600,x);ctx.stroke()}
 if(mode==='gems'){circle(gem.x,gem.y,25,'#8b4bc4');ctx.fillStyle='#fff';ctx.font='bold 16px sans-serif';ctx.textAlign='center';ctx.fillText('💎',gem.x,gem.y+6)}
 
-if(mode==='heist'){const shielded=now<safeShieldUntil;ctx.fillStyle='#8a6b49';ctx.fillRect(475,255,75,90);ctx.fillStyle='#ffe17c';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.fillText('СЕЙФ',512,305);if(shielded){ctx.strokeStyle='#65d9ff';ctx.lineWidth=7;ctx.strokeRect(469,249,87,102);ctx.fillStyle='#65d9ff';ctx.font='bold 11px sans-serif';ctx.fillText('ЩИТ '+Math.ceil((safeShieldUntil-now)/1000)+'с',512,365)}ctx.fillStyle='#222';ctx.fillRect(470,235,85,7);ctx.fillStyle=shielded?'#65d9ff':'#69dc77';ctx.fillRect(470,235,85*safeHP/2000,7);ctx.fillStyle='#fff';ctx.font='10px sans-serif';ctx.fillText(Math.ceil(safeHP)+'/2000',512,230)}
+if(mode==='heist'){const shielded=now<safeShieldUntil;
+  // Вражеский сейф справа, собственный — слева.
+  ctx.fillStyle='#8a6b49';ctx.fillRect(475,255,75,90);ctx.fillStyle='#ffe17c';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.fillText('ВРАГ',512,305);
+  if(shielded){ctx.strokeStyle='#65d9ff';ctx.lineWidth=7;ctx.strokeRect(469,249,87,102);ctx.fillStyle='#65d9ff';ctx.font='bold 11px sans-serif';ctx.fillText('ЩИТ '+Math.ceil((safeShieldUntil-now)/1000)+'с',512,365)}
+  ctx.fillStyle='#222';ctx.fillRect(470,235,85,7);ctx.fillStyle=shielded?'#65d9ff':'#69dc77';ctx.fillRect(470,235,85*safeHP/750,7);ctx.fillStyle='#fff';ctx.font='10px sans-serif';ctx.fillText(Math.ceil(safeHP)+'/750',512,230);
+  ctx.fillStyle='#2878a8';ctx.fillRect(50,255,75,90);ctx.fillStyle='#bcecff';ctx.font='bold 13px sans-serif';ctx.fillText('ТВОЙ',87,305);ctx.fillStyle='#222';ctx.fillRect(45,235,85,7);ctx.fillStyle='#45c9f0';ctx.fillRect(45,235,85*ownSafeHP/750,7);ctx.fillStyle='#fff';ctx.font='10px sans-serif';ctx.fillText(Math.ceil(ownSafeHP)+'/750',87,230)}
 // В захвате кристаллов и ограблении противники возрождаются через 5 секунд.
 if(mode==='gems'||mode==='heist'){
   for(const e of enemies){
@@ -186,7 +192,7 @@ if(mode==='gems'||mode==='heist'){
 }
 let alive=enemies.filter(e=>e.hp>0);
 // В нокауте союзники действуют самостоятельно: ищут врагов, выбирают позицию и атакуют.
-if(mode==='knockout'){
+if(mode==='knockout'||mode==='gems'||mode==='heist'){
   for(let i=0;i<allies.length;i++){
     const ally=allies[i];
     const target=enemies.filter(e=>e.hp>0).sort((a,b)=>Math.hypot(a.x-ally.x,a.y-ally.y)-Math.hypot(b.x-ally.x,b.y-ally.y))[0];
@@ -229,7 +235,7 @@ if(threat){let side=(threat.vx*uy-threat.vy*ux)>=0?1:-1,sv=Math.hypot(threat.vx,
 let ml=Math.hypot(mx,my)||1,speed=e.style===0?.88:e.style===1?.58:.72;
 e.x=Math.max(24,Math.min(576,e.x+mx/ml*speed*dt));e.y=Math.max(24,Math.min(576,e.y+my/ml*speed*dt));
 e.cd-=dt;
-if(d<250&&e.cd<=0){let lead=Math.min(12,d/3.4),tx=player.x+move.x*3.2*lead,ty=player.y+move.y*3.2*lead,txd=tx-e.x,tyd=ty-e.y,tl=Math.hypot(txd,tyd)||1;enemyShots.push({x:e.x,y:e.y,vx:txd/tl*3.4,vy:tyd/tl*3.4,life:80});e.cd=(e.style===0?88:e.style===1?105:96)+Math.random()*28}
+if(d<250&&e.cd<=0){let tx=player.x+move.x*3.2*Math.min(12,d/3.4),ty=player.y+move.y*3.2*Math.min(12,d/3.4);if(mode==='heist'&&Math.hypot(87-e.x,300-e.y)<d+80){tx=87;ty=300}let txd=tx-e.x,tyd=ty-e.y,tl=Math.hypot(txd,tyd)||1;enemyShots.push({x:e.x,y:e.y,vx:txd/tl*3.4,vy:tyd/tl*3.4,life:80,targetSafe:mode==='heist'&&tx===87});e.cd=(e.style===0?88:e.style===1?105:96)+Math.random()*28}
 circle(e.x,e.y,15,e.style===0?'#c64b43':e.style===1?'#9b55c9':'#d17a35');circle(e.x,e.y-3,7,'#ffcfaa');ctx.fillStyle='#18233b';ctx.fillRect(e.x-16,e.y-25,32,4);ctx.fillStyle='#6be17b';ctx.fillRect(e.x-16,e.y-25,32*Math.max(0,e.hp)/e.max,4)
 }
 for(let s of allyShots){
@@ -288,10 +294,10 @@ for(const puddle of puddles){
 puddles=puddles.filter(p=>p.life>0);
 for(let e of effects){e.life-=dt;ctx.strokeStyle='rgba(255,210,80,'+Math.max(0,e.life/14)+')';ctx.lineWidth=5;ctx.beginPath();ctx.arc(e.x,e.y,e.r*(1+(14-e.life)/14*.25),0,Math.PI*2);ctx.stroke()}
 effects=effects.filter(e=>e.life>0);
-for(let s of enemyShots){s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;if(Math.hypot(s.x-player.x,s.y-player.y)<18){hp-=.495*dt*4;s.life=0}circle(s.x,s.y,5,'#ff9b72')}enemyShots=enemyShots.filter(s=>s.life>0);
+for(let s of enemyShots){s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;if(s.targetSafe&&mode==='heist'&&Math.hypot(s.x-87,s.y-300)<30){damageOwnSafe(18);s.life=0}else if(Math.hypot(s.x-player.x,s.y-player.y)<18){hp-=.495*dt*4;s.life=0}circle(s.x,s.y,5,'#ff9b72')}enemyShots=enemyShots.filter(s=>s.life>0);
 if(mode==='gems'&&Math.hypot(player.x-gem.x,player.y-gem.y)<35&&crystals<10){crystals++;gem={x:55+Math.random()*490,y:55+Math.random()*490};$('status').textContent='Кристалл подобран! 💎';}
 
-if(mode==='knockout'){
+if(mode==='knockout'||mode==='gems'||mode==='heist'){
   for(const ally of allies){
     circle(ally.x,ally.y,17,'#20b8a5');circle(ally.x,ally.y-3,7,'#d5fff4');
     ctx.fillStyle='#102b3a';ctx.fillRect(ally.x-16,ally.y-25,32,4);
@@ -302,7 +308,7 @@ if(mode==='knockout'){
 if(aiming){ctx.save();ctx.translate(player.x,player.y);ctx.rotate(Math.atan2(aim.y,aim.x));ctx.strokeStyle='#fff3a8';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(f().range,0);ctx.stroke();ctx.restore()}
 circle(player.x,player.y,17,'#2878e8');circle(player.x+aim.x*10,player.y+aim.y*10,6,'#ffe18a');hud();
 let won=mode==='gems'?crystals>=10:mode==='heist'?safeHP<=0:!enemies.some(e=>e.hp>0);
-if(hp<=0){finish(false);return}if(won){finish(true);return}raf=requestAnimationFrame(loop)}
+if(hp<=0||(mode==='heist'&&ownSafeHP<=0)){finish(false);return}if(won){finish(true);return}raf=requestAnimationFrame(loop)}
 function finish(win){running=false;reloading=false;reloadToken++;if(win){save.trophies+=10;save.coins+=25;persist();$('endTitle').textContent='🏆 ПОБЕДА!';$('endMessage').textContent='Цель режима выполнена! +10 кубков и +25 монет.'}else{$('endTitle').textContent='БИТВА ОКОНЧЕНА';$('endMessage').textContent='Попробуй ещё раз!'}show('endScreen')}
 function pad(stick,knob,type){let active=false,id=null;function update(e){let r=stick.getBoundingClientRect(),dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2),len=Math.hypot(dx,dy),max=35;if(len>max){dx=dx/len*max;dy=dy/len*max}knob.style.transform=`translate(${dx}px,${dy}px)`;let vx=dx/max,vy=dy/max;if(type==='move')move={x:vx,y:vy};else if(Math.hypot(vx,vy)>.15){aim={x:vx/Math.hypot(vx,vy),y:vy/Math.hypot(vx,vy)};aiming=true}}
 function end(){if(!active)return;active=false;try{stick.releasePointerCapture(id)}catch(e){}knob.style.transform='';if(type==='move')move={x:0,y:0};else{aiming=false;if(running)shoot()}}
