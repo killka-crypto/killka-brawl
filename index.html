@@ -169,7 +169,11 @@ const fighters=[
 {id:'spike',name:'Спайк',emoji:'🌵',hp:105,damage:58,reload:1350,range:220,spread:.42},
 {id:'leon',name:'Леон',emoji:'🦎',hp:115,damage:36,reload:1100,range:230,spread:.30},
 {id:'amber',name:'Амбер',emoji:'🔥',hp:110,damage:38,reload:1350,range:225,spread:.22},
-{id:'sandy',name:'Сэнди',emoji:'💤',hp:130,damage:45,reload:1200,range:205,spread:.42}
+{id:'sandy',name:'Сэнди',emoji:'💤',hp:130,damage:45,reload:1200,range:205,spread:.42},
+{id:'rico',name:'Рико',emoji:'🤖',hp:105,damage:32,reload:1150,range:245,spread:.34},
+{id:'tara',name:'Тара',emoji:'🃏',hp:125,damage:42,reload:1350,range:205,spread:.28},
+{id:'gene',name:'Джин',emoji:'🧞',hp:120,damage:52,reload:1450,range:260,spread:.04},
+{id:'frank',name:'Фрэнк',emoji:'🔨',hp:210,damage:55,reload:1600,range:105,spread:.0}
 ];
 const modes={gems:{name:'ЗАХВАТ КРИСТАЛЛОВ',goal:'Собери 10 кристаллов',icon:'💎'},knockout:{name:'НОКАУТ',goal:'Победи 3 противников',icon:'💥'},showdown:{name:'СТОЛКНОВЕНИЕ',goal:'Победи 10 противников',icon:'☠️'},heist:{name:'ОГРАБЛЕНИЕ',goal:'Уничтожь сейф врага',icon:'💰'},ranked:{name:'РАНГОВЫЙ БОЙ',goal:'Победи 5 противников',icon:'🏅'}};
 let save={coins:100,trophies:0,rankPoints:0,rankClaimed:[],claimed:[],unlocked:['colt'],upgrades:{}};try{save={...save,...JSON.parse(localStorage.getItem('kbAutoSave')||'{}')}}catch(e){}
@@ -304,6 +308,21 @@ if(x.id==='colt'){
 }else if(x.id==='amber'){
   // Амбер выпускает короткую струю огня из пяти быстрых огненных снарядов.
   for(let i=0;i<5;i++)addShot(a+(i-2)*x.spread/4,x.damage/5,i*4,{flame:true,poison:true,r:5});
+}else if(x.id==='rico'){
+  // Рико выпускает веер из пяти быстрых энергетических шаров.
+  for(let i=0;i<5;i++)addShot(a+(i-2)*x.spread/2,x.damage/5,i*3,{r:5,pierce:true});
+}else if(x.id==='tara'){
+  // Тара бросает три карты веером; каждая карта пробивает цель.
+  for(let i=0;i<3;i++)addShot(a+(i-1)*x.spread,x.damage/3,i*5,{r:6,pierce:true});
+}else if(x.id==='gene'){
+  // Джин выпускает один мощный магический снаряд.
+  addShot(a,x.damage,0,{r:8,pierce:false});
+}else if(x.id==='frank'){
+  // Фрэнк бьёт молотом по земле и задевает врагов рядом.
+  const radius=92;
+  for(const e of enemies)if(e.hp>0&&Math.hypot(e.x-player.x,e.y-player.y)<=radius)e.hp-=x.damage;
+  if(mode==='heist'&&Math.hypot(512-player.x,300-player.y)<=radius+35)damageSafe(x.damage);
+  effects.push({x:player.x,y:player.y,life:18,r:radius});
 }else if(x.id==='sandy'){
   // Сохраняем прежний веер Сэнди, добавляя задержку между снарядами.
   for(let i=0;i<5;i++)addShot(a+(i-2)*x.spread/2,x.damage/5,i*8);
