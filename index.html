@@ -334,8 +334,10 @@ if(x.id==='colt'){
   // Беа выпускает одну дальнюю и мощную пчелу.
   addShot(a,x.damage*(beaPowered?2:1),0,{bee:true,r:7,beaPowered});
 }else if(x.id==='griff'){
-  // Грифф веером выбрасывает девять монет.
-  for(let i=0;i<9;i++)addShot(a+(i-4)*.12,x.damage/9,0,{coin:true,r:5});
+  // Грифф выполняет четыре последовательные атаки по три монеты; каждая тройка летит по прежней дуге.
+  for(let volley=0;volley<4;volley++){
+    for(let i=0;i<3;i++)addShot(a+(i-1)*.24,x.damage/12,volley*8,{coin:true,r:5});
+  }
 }else if(x.id==='max'){
   // Макс быстро выпускает четыре снаряда с небольшим разбросом.
   for(let i=0;i<4;i++)addShot(a+(i-1.5)*.09,x.damage/4,i*3,{speedy:true,r:4});
