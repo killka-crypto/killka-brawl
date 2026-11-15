@@ -309,20 +309,17 @@ if(x.id==='colt'){
   // Амбер выпускает короткую струю огня из пяти быстрых огненных снарядов.
   for(let i=0;i<5;i++)addShot(a+(i-2)*x.spread/4,x.damage/5,i*4,{flame:true,poison:true,r:5});
 }else if(x.id==='rico'){
-  // Рико выпускает веер из пяти быстрых энергетических шаров.
-  for(let i=0;i<5;i++)addShot(a+(i-2)*x.spread/2,x.damage/5,i*3,{r:5,pierce:true});
+  // Энергетические шары Рико отскакивают от четырёх границ арены.
+  for(let i=0;i<5;i++)addShot(a+(i-2)*x.spread/2,x.damage/5,i*3,{r:5,pierce:true,bounces:4,ricoBounce:true});
 }else if(x.id==='tara'){
-  // Тара бросает три карты веером; каждая карта пробивает цель.
+  // Карты Тары проходят сквозь всех противников на пути.
   for(let i=0;i<3;i++)addShot(a+(i-1)*x.spread,x.damage/3,i*5,{r:6,pierce:true});
 }else if(x.id==='gene'){
-  // Джин выпускает один мощный магический снаряд.
-  addShot(a,x.damage,0,{r:8,pierce:false});
+  // Если магический снаряд Джина никого не задел, он распадается на пять шариков.
+  addShot(a,x.damage,0,{r:8,pierce:false,geneSeed:true,fragmentDamage:x.damage/5});
 }else if(x.id==='frank'){
-  // Фрэнк бьёт молотом по земле и задевает врагов рядом.
-  const radius=92;
-  for(const e of enemies)if(e.hp>0&&Math.hypot(e.x-player.x,e.y-player.y)<=radius)e.hp-=x.damage;
-  if(mode==='heist'&&Math.hypot(512-player.x,300-player.y)<=radius+35)damageSafe(x.damage);
-  effects.push({x:player.x,y:player.y,life:18,r:radius});
+  // Фрэнк начинает замах сразу, а удар наносит через небольшую задержку.
+  shots.push({x:player.x,y:player.y,vx:0,vy:0,life:30,damage:x.damage,r:0,wait:9,frankSmash:true});
 }else if(x.id==='sandy'){
   // Сохраняем прежний веер Сэнди, добавляя задержку между снарядами.
   for(let i=0;i<5;i++)addShot(a+(i-2)*x.spread/2,x.damage/5,i*8);
@@ -342,6 +339,14 @@ function spikeBurst(s){
       life:18,damage:s.burstDamage,r:4,pierce:false,spikeFragment:true});
   }
   effects.push({x:s.x,y:s.y,life:12,r:28});
+}
+function geneBurst(s){
+  for(let i=0;i<5;i++){
+    const angle=i*Math.PI*2/5;
+    shots.push({x:s.x,y:s.y,vx:Math.cos(angle)*7,vy:Math.sin(angle)*7,
+      life:18,damage:s.fragmentDamage,r:4,pierce:false,geneFragment:true});
+  }
+  effects.push({x:s.x,y:s.y,life:12,r:24});
 }
 function damageOwnSafe(amount){const now=performance.now();if(now<ownSafeShieldUntil||ownSafeHP<=0)return;ownSafeHP=Math.max(0,ownSafeHP-amount);if(ownSafeNextShield>0&&ownSafeHP<=ownSafeNextShield){ownSafeHP=ownSafeNextShield;ownSafeShieldUntil=now+10000;ownSafeNextShield-=187.5;$('status').textContent='🛡️ Твой сейф активировал щит на 10 секунд!';}}
 function damageSafe(amount){const now=performance.now();if(now<safeShieldUntil||safeHP<=0)return;safeHP=Math.max(0,safeHP-amount);if(safeNextShield>0&&safeHP<=safeNextShield){safeHP=safeNextShield;safeShieldUntil=now+10000;safeNextShield-=187.5;$('status').textContent='🛡️ Сейф активировал щит на 10 секунд!';}}
@@ -425,7 +430,22 @@ for(let s of allyShots){
 allyShots=allyShots.filter(s=>s.life>0);
 for(let s of shots){
 if(s.wait>0){s.wait-=dt;continue}
+if(s.frankSmash){
+  const radius=92;
+  for(const e of enemies)if(e.hp>0&&Math.hypot(e.x-s.x,e.y-s.y)<=radius)e.hp-=s.damage;
+  if(mode==='heist'&&Math.hypot(512-s.x,300-s.y)<=radius+35)damageSafe(s.damage);
+  effects.push({x:s.x,y:s.y,life:18,r:radius});
+  s.life=0;
+  continue;
+}
 s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;
+if(s.ricoBounce){
+  if(s.x<8){s.x=8;s.vx=Math.abs(s.vx);s.bounces--}
+  else if(s.x>592){s.x=592;s.vx=-Math.abs(s.vx);s.bounces--}
+  if(s.y<8){s.y=8;s.vy=Math.abs(s.vy);s.bounces--}
+  else if(s.y>592){s.y=592;s.vy=-Math.abs(s.vy);s.bounces--}
+  if(s.bounces<0)s.life=0;
+}
 if(s.spikeSeed){
   let hit=false;
   for(const e of alive){
@@ -440,6 +460,21 @@ if(s.spikeSeed){
   }else{
     circle(s.x,s.y,7,'#7bdc67');
   }
+  continue;
+}
+if(s.geneSeed){
+  let hit=false;
+  for(const e of alive){
+    if(e.hp>0&&Math.hypot(e.x-s.x,e.y-s.y)<20){
+      e.hp-=s.damage;
+      hit=true;
+      break;
+    }
+  }
+  if(mode==='heist'&&Math.hypot(512-s.x,300-s.y)<55){damageSafe(s.damage);hit=true;}
+  if(hit){s.life=0;}
+  else if(s.life<=0){geneBurst(s);s.life=0;}
+  else circle(s.x,s.y,8,'#b77cff');
   continue;
 }
 if(s.slowAtEnd){
