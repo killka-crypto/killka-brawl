@@ -309,17 +309,17 @@ if(x.id==='colt'){
   // Амбер выпускает короткую струю огня из пяти быстрых огненных снарядов.
   for(let i=0;i<5;i++)addShot(a+(i-2)*x.spread/4,x.damage/5,i*4,{flame:true,poison:true,r:5});
 }else if(x.id==='rico'){
-  // Энергетические шары Рико отскакивают от четырёх границ арены.
-  for(let i=0;i<5;i++)addShot(a+(i-2)*x.spread/2,x.damage/5,i*3,{r:5,pierce:true,bounces:4,ricoBounce:true});
+  // Рико выпускает пять шаров строго по одной линии, друг за другом; каждый отскакивает от стен.
+  for(let i=0;i<5;i++)addShot(a,x.damage/5,i*7,{r:5,pierce:true,bounces:4,ricoBounce:true});
 }else if(x.id==='tara'){
   // Карты Тары проходят сквозь всех противников на пути.
-  for(let i=0;i<3;i++)addShot(a+(i-1)*x.spread,x.damage/3,i*5,{r:6,pierce:true});
+  for(let i=0;i<3;i++)addShot(a+(i-1)*x.spread,x.damage/3,0,{r:6,pierce:true});
 }else if(x.id==='gene'){
   // Если магический снаряд Джина никого не задел, он распадается на пять шариков.
   addShot(a,x.damage,0,{r:8,pierce:false,geneSeed:true,fragmentDamage:x.damage/5});
 }else if(x.id==='frank'){
   // Фрэнк начинает замах сразу, а удар наносит через небольшую задержку.
-  shots.push({x:player.x,y:player.y,vx:0,vy:0,life:30,damage:x.damage,r:0,wait:9,frankSmash:true});
+  shots.push({x:player.x,y:player.y,vx:0,vy:0,life:30,damage:x.damage,r:0,wait:9,frankSmash:true,angle:a});
 }else if(x.id==='sandy'){
   // Сохраняем прежний веер Сэнди, добавляя задержку между снарядами.
   for(let i=0;i<5;i++)addShot(a+(i-2)*x.spread/2,x.damage/5,i*8);
@@ -341,8 +341,10 @@ function spikeBurst(s){
   effects.push({x:s.x,y:s.y,life:12,r:28});
 }
 function geneBurst(s){
+  // Осколки Джина летят вперёд узким веером по направлению исходного выстрела.
+  const base=Math.atan2(s.vy,s.vx);
   for(let i=0;i<5;i++){
-    const angle=i*Math.PI*2/5;
+    const angle=base+(i-2)*(Math.PI/15); // ровно 12° между соседними лучами
     shots.push({x:s.x,y:s.y,vx:Math.cos(angle)*7,vy:Math.sin(angle)*7,
       life:18,damage:s.fragmentDamage,r:4,pierce:false,geneFragment:true});
   }
@@ -431,10 +433,16 @@ allyShots=allyShots.filter(s=>s.life>0);
 for(let s of shots){
 if(s.wait>0){s.wait-=dt;continue}
 if(s.frankSmash){
-  const radius=92;
-  for(const e of enemies)if(e.hp>0&&Math.hypot(e.x-s.x,e.y-s.y)<=radius)e.hp-=s.damage;
-  if(mode==='heist'&&Math.hypot(512-s.x,300-s.y)<=radius+35)damageSafe(s.damage);
-  effects.push({x:s.x,y:s.y,life:18,r:radius});
+  const radius=92, halfAngle=Math.PI/6;
+  const inFrankCone=(tx,ty,extra=0)=>{
+    const dx=tx-s.x,dy=ty-s.y,dist=Math.hypot(dx,dy);
+    if(dist>radius+extra)return false;
+    let diff=Math.atan2(Math.sin(Math.atan2(dy,dx)-s.angle),Math.cos(Math.atan2(dy,dx)-s.angle));
+    return Math.abs(diff)<=halfAngle;
+  };
+  for(const e of enemies)if(e.hp>0&&inFrankCone(e.x,e.y))e.hp-=s.damage;
+  if(mode==='heist'&&inFrankCone(512,300,35))damageSafe(s.damage);
+  effects.push({x:s.x,y:s.y,life:18,r:radius,sector:true,angle:s.angle,halfAngle});
   s.life=0;
   continue;
 }
@@ -527,7 +535,7 @@ for(const puddle of puddles){
   ctx.strokeStyle='rgba(225,255,150,.7)';ctx.lineWidth=2;ctx.stroke();
 }
 puddles=puddles.filter(p=>p.life>0);
-for(let e of effects){e.life-=dt;ctx.strokeStyle='rgba(255,210,80,'+Math.max(0,e.life/14)+')';ctx.lineWidth=5;ctx.beginPath();ctx.arc(e.x,e.y,e.r*(1+(14-e.life)/14*.25),0,Math.PI*2);ctx.stroke()}
+for(let e of effects){e.life-=dt;ctx.strokeStyle='rgba(255,210,80,'+Math.max(0,e.life/14)+')';ctx.fillStyle='rgba(255,210,80,'+Math.max(0,e.life/18*.22)+')';ctx.lineWidth=5;const rr=e.r*(1+(14-e.life)/14*.25);if(e.sector){ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.arc(e.x,e.y,rr,e.angle-e.halfAngle,e.angle+e.halfAngle);ctx.closePath();ctx.fill();ctx.stroke()}else{ctx.beginPath();ctx.arc(e.x,e.y,rr,0,Math.PI*2);ctx.stroke()}}
 effects=effects.filter(e=>e.life>0);
 for(let s of enemyShots){s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;if(s.targetSafe&&mode==='heist'&&Math.hypot(s.x-87,s.y-300)<30){damageOwnSafe(18);s.life=0}else if(Math.hypot(s.x-player.x,s.y-player.y)<18){hp-=.495*dt*4;s.life=0}circle(s.x,s.y,5,'#ff9b72')}enemyShots=enemyShots.filter(s=>s.life>0);
 if(mode==='gems'&&Math.hypot(player.x-gem.x,player.y-gem.y)<35&&crystals<10){crystals++;gem={x:55+Math.random()*490,y:55+Math.random()*490};$('status').textContent='Кристалл подобран! 💎';}
