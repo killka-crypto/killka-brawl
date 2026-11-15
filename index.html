@@ -286,7 +286,7 @@ function useSuper(){
  const area=(radius,dmg)=>{for(const e of enemies)if(e.hp>0&&Math.hypot(e.x-player.x,e.y-player.y)<=radius)hit(e,dmg);effects.push({x:player.x,y:player.y,life:20,r:radius});};
  const volley=(count,spread,dmg,extra={})=>{for(let i=0;i<count;i++)shots.push({x:player.x,y:player.y,vx:Math.cos(a+(i-(count-1)/2)*spread)*8,vy:Math.sin(a+(i-(count-1)/2)*spread)*8,life:x.range/8+8,damage:dmg,r:7,noCharge:true,...extra});};
  switch(x.id){
- case 'colt': volley(12,.055,x.damage*.55); $('status').textContent='УЛЬТА КОЛЬТА: шквал пуль!'; break;
+ case 'colt': for(let i=0;i<12;i++)shots.push({x:player.x,y:player.y,vx:Math.cos(a)*8,vy:Math.sin(a)*8,life:x.range/8+8,wait:i*1,damage:x.damage*.55,r:7,noCharge:true}); $('status').textContent='УЛЬТА КОЛЬТА: пули летят друг за другом по линии!'; break;
  case 'bull': player.x=Math.max(25,Math.min(575,player.x+Math.cos(a)*145));player.y=Math.max(25,Math.min(575,player.y+Math.sin(a)*145));area(72,x.damage*1.8);$('status').textContent='УЛЬТА БУЛА: мощный рывок!';break;
  case 'brock': for(let i=0;i<6;i++){const px=player.x+Math.cos(a)*x.range*(.35+i*.09),py=player.y+Math.sin(a)*x.range*(.35+i*.09);for(const e of enemies)if(e.hp>0&&Math.hypot(e.x-px,e.y-py)<48)e.hp-=x.damage*.8;effects.push({x:px,y:py,life:22,r:48});}$('status').textContent='УЛЬТА БРОКА: ракетный дождь!';break;
  case 'piper': player.x=Math.max(25,Math.min(575,player.x-Math.cos(a)*90));player.y=Math.max(25,Math.min(575,player.y-Math.sin(a)*90));for(let i=0;i<4;i++){const px=player.x+Math.cos(a+i*Math.PI/2)*42,py=player.y+Math.sin(a+i*Math.PI/2)*42;for(const e of enemies)if(e.hp>0&&Math.hypot(e.x-px,e.y-py)<45)e.hp-=x.damage*.8;effects.push({x:px,y:py,life:22,r:45});}$('status').textContent='УЛЬТА ПАЙПЕР: прыжок и взрывные снаряды!';break;
@@ -622,7 +622,7 @@ if(mode==='knockout'||mode==='gems'||mode==='heist'){
   }
 }
 if(aiming){ctx.save();ctx.translate(player.x,player.y);ctx.rotate(Math.atan2(aim.y,aim.x));ctx.strokeStyle='#fff3a8';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(f().range,0);ctx.stroke();ctx.restore()}
-if(superHits>=7){const sa=Math.atan2(superAim.y,superAim.x),sr=Math.min(f().range,230);ctx.save();ctx.translate(player.x,player.y);ctx.rotate(sa);ctx.setLineDash([10,7]);ctx.strokeStyle='#e2b7ff';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(sr,0);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#e2b7ff55';ctx.beginPath();ctx.arc(sr,0,18,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#f4dcff';ctx.lineWidth=2;ctx.stroke();ctx.restore()}
+if(superAiming&&superHits>=7){const sa=Math.atan2(superAim.y,superAim.x),sr=Math.min(f().range,230);ctx.save();ctx.translate(player.x,player.y);ctx.rotate(sa);ctx.setLineDash([10,7]);ctx.strokeStyle='#e2b7ff';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(sr,0);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#e2b7ff55';ctx.beginPath();ctx.arc(sr,0,18,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#f4dcff';ctx.lineWidth=2;ctx.stroke();ctx.restore()}
 circle(player.x,player.y,17,'#2878e8');circle(player.x+aim.x*10,player.y+aim.y*10,6,'#ffe18a');hud();
 let won=mode==='gems'?crystals>=10:mode==='heist'?safeHP<=0:!enemies.some(e=>e.hp>0);
 if(hp<=0||(mode==='heist'&&ownSafeHP<=0)){if(mode==='knockout'){handleKnockoutRound(false);return}finish(false);return}if(won){if(mode==='knockout'){handleKnockoutRound(true);return}finish(true);return}raf=requestAnimationFrame(loop)}
