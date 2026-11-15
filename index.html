@@ -36,9 +36,25 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:1/1;background:#579b55;
 .admin-name{color:#42ff72!important;text-shadow:0 0 7px #20ff55,0 0 16px #12b83d!important}
 .admin-tag{display:inline-block;color:#55ff79;font-weight:1000;text-shadow:0 0 8px #22e84e;letter-spacing:.5px}
 
+
+/* KILKACELL startup screen */
+#kilkacellLoading{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#050505;color:#fff;opacity:1;visibility:visible;transition:opacity .45s ease,visibility .45s ease;padding:24px;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+#kilkacellLoading.done{opacity:0;visibility:hidden;pointer-events:none}
+#kilkacellLoading .loading-name{font-size:clamp(38px,10vw,66px);font-weight:1000;letter-spacing:.045em;text-transform:lowercase;color:#fff;text-shadow:0 0 24px #ffffff35;animation:kilkaPulse 1.5s ease-in-out infinite}
+#kilkacellLoading .loading-track{position:absolute;left:12%;right:12%;bottom:calc(42px + env(safe-area-inset-bottom));height:5px;border-radius:9px;background:#292929;overflow:hidden}
+#kilkacellLoading .loading-fill{height:100%;width:0;border-radius:9px;background:#fff;box-shadow:0 0 12px #fff;animation:kilkaLoad 2.15s cubic-bezier(.2,.7,.2,1) forwards}
+@keyframes kilkaLoad{0%{width:0}35%{width:38%}75%{width:78%}100%{width:100%}}
+@keyframes kilkaPulse{0%,100%{opacity:1}50%{opacity:.78}}
+@media(prefers-reduced-motion:reduce){#kilkacellLoading .loading-name{animation:none}#kilkacellLoading .loading-fill{animation-duration:.5s}}
+
 </style>
 </head>
-<body><div id="app">
+<body>
+<div id="kilkacellLoading" aria-label="Загрузка kilkacell">
+  <div class="loading-name">kilkacell</div>
+  <div class="loading-track"><div class="loading-fill"></div></div>
+</div>
+<div id="app">
 <div class="top"><div><span class="gold">KILLKA</span> BRAWL</div><div>🪙 <span id="coins">100</span>　🏆 <span id="trophies">0</span></div></div>
 <section id="home" class="screen">
 <div class="panel" style="text-align:center"><div style="font-size:28px;font-weight:950" class="gold">⚔️ BRAWL ARENA</div><div class="small">Выбери режим и бойца!</div></div>
@@ -831,4 +847,16 @@ function drawRoad(){
 $('openBox').onclick=()=>{if(save.coins<30){$('boxResult').textContent='Не хватает монет!';return}save.coins-=30;let r=Math.random();if(r<.15){let locked=fighters.filter(x=>!save.unlocked.includes(x.id));if(locked.length){let prize=locked[Math.floor(Math.random()*locked.length)];save.unlocked.push(prize.id);$('boxResult').textContent='🎉 Новый боец: '+prize.name+'!';renderFighters()}else{save.coins+=50;$('boxResult').textContent='Все бойцы открыты! +50 монет'}}else{let n=9+Math.floor(Math.random()*4);save.coins+=n;$('boxResult').textContent='✨ Выпало '+n+' монет!'}persist()};
 renderFighters();renderUpgradeFighters();renderUpgradeDetails();refresh();
 })();
-</script></body></html>
+</script>
+<script>
+(()=>{
+  const splash=document.getElementById('kilkacellLoading');
+  if(!splash)return;
+  const hide=()=>{setTimeout(()=>splash.classList.add('done'),2100);setTimeout(()=>splash.remove(),2600)};
+  if(document.readyState==='complete')hide();
+  else window.addEventListener('load',hide,{once:true});
+  // Fallback for browsers that delay the load event.
+  setTimeout(()=>{if(document.getElementById('kilkacellLoading'))hide()},3500);
+})();
+</script>
+</body></html>
