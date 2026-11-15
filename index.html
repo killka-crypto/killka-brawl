@@ -17,7 +17,7 @@ button:active{transform:scale(.98)}button.active{background:#d79b28;color:#17152
 .screen{display:flex;flex-direction:column;gap:10px}h2{font-size:19px;color:#ffdc70;margin:4px 0}
 canvas{display:block;width:100%;height:auto;aspect-ratio:1/1;background:#579b55;border:3px solid #9cbb73;border-radius:13px;touch-action:none}
 .arenahead{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-weight:900}
-.controls{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 4px}
+.controls{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 4px}.super-aim-wrap{display:none;justify-content:center;align-items:center;padding:4px 0 8px}.super-aim-wrap.ready{display:flex}.super-aim-stick{border-color:#d9b7ff;background:#9b63d833}.super-aim-stick .knob{background:#d9b7ffdd}
 .stick{width:112px;height:112px;border-radius:50%;background:#ffffff20;border:2px solid #ffffff80;position:relative;touch-action:none;flex-shrink:0}
 .knob{width:42px;height:42px;border-radius:50%;background:#d9e2ffbb;border:2px solid white;position:absolute;left:33px;top:33px;pointer-events:none}
 .status{text-align:center;min-height:24px;color:#ffe17c;font-size:13px;font-weight:800}
@@ -83,7 +83,9 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:1/1;background:#579b55;
 <div class="controls">
 <div style="text-align:center"><div class="stick" id="moveStick"><div class="knob" id="moveKnob"></div></div><div class="small" style="margin-top:5px">ДВИЖЕНИЕ</div></div>
 <div style="text-align:center"><div class="stick" id="aimStick"><div class="knob" id="aimKnob"></div></div><div class="small" style="margin-top:5px">ПРИЦЕЛ / ОГОНЬ</div></div>
-</div><button id="back" style="width:100%">В МЕНЮ</button>
+</div>
+<div class="super-aim-wrap" id="superAimWrap"><div style="text-align:center"><div class="stick super-aim-stick" id="superAimStick"><div class="knob" id="superAimKnob"></div></div><div class="small" style="margin-top:5px;color:#e2caff">⭐ ПРИЦЕЛ УЛЬТЫ</div><div class="small">Наведи траекторию и нажми кнопку ульты</div></div></div>
+<button id="back" style="width:100%">В МЕНЮ</button>
 </section>
 <section id="profileScreen" class="screen hidden">
 <h2>👤 Профиль игрока</h2>
@@ -215,7 +217,7 @@ if(!save.trophyRewardFixV1){
   save.trophyRewardFixV1=true;
 }
 fighters.forEach(x=>{let n=Number(save.upgrades[x.id]||0);save.upgrades[x.id]=Math.max(0,Math.min(11,Number.isFinite(n)?Math.floor(n):0))});
-let chosen='colt',rankedChosen='colt',mode='gems',rankedRun=false,selectedMode='showdown',countdownTimer=null,knockoutMatchActive=false,knockoutRound=1,knockoutPlayerWins=0,knockoutEnemyWins=0,knockoutNextTimer=null,running=false,reloading=false,ammo=3,hp=100,player={x:300,y:300},enemies=[],allies=[],allyShots=[],shots=[],enemyShots=[],effects=[],puddles=[],move={x:0,y:0},aim={x:1,y:0},aiming=false,last=0,reloadStart=0,beaBoostReady=false,bibiLastKnockback=-Infinity,superHits=0,superSpeedUntil=0,superShieldUntil=0,reloadToken=0,raf=0,crystals=0,goals=0,safeHP=750,ownSafeHP=750,safeShieldUntil=0,safeNextShield=562.5,ownSafeShieldUntil=0,ownSafeNextShield=562.5,gem={x:300,y:300};
+let chosen='colt',rankedChosen='colt',mode='gems',rankedRun=false,selectedMode='showdown',countdownTimer=null,knockoutMatchActive=false,knockoutRound=1,knockoutPlayerWins=0,knockoutEnemyWins=0,knockoutNextTimer=null,running=false,reloading=false,ammo=3,hp=100,player={x:300,y:300},enemies=[],allies=[],allyShots=[],shots=[],enemyShots=[],effects=[],puddles=[],move={x:0,y:0},aim={x:1,y:0},superAim={x:1,y:0},aiming=false,superAiming=false,last=0,reloadStart=0,beaBoostReady=false,bibiLastKnockback=-Infinity,superHits=0,superSpeedUntil=0,superShieldUntil=0,reloadToken=0,raf=0,crystals=0,goals=0,safeHP=750,ownSafeHP=750,safeShieldUntil=0,safeNextShield=562.5,ownSafeShieldUntil=0,ownSafeNextShield=562.5,gem={x:300,y:300};
 const f=()=>{const base=fighters.find(x=>x.id===chosen)||fighters[0];const level=save.upgrades[base.id]||0;const nerf=base.id==='crow'?.2:1;return {...base,hp:Math.round(base.hp*(1+level*.04)),damage:Math.round(base.damage*(1+level*.05)*.6*nerf)}};
 const battleCardDefs=[
 {id:'bronze',name:'БРОНЗОВАЯ',subtitle:'Достигни Бронзы',min:0,icon:'🥉',className:'bronze'},
@@ -263,10 +265,10 @@ function rollMode(){openModeSelect()}
 function objective(){if(mode==='gems')return `💎 ${crystals}/10`;if(mode==='knockout')return `💥 Раунд ${knockoutRound}/3 · ${knockoutPlayerWins}:${knockoutEnemyWins}`;if(mode==='ranked')return `🏅 ${5-enemies.filter(e=>e.hp>0).length}/5`;if(mode==='heist')return `💰 Вражеский сейф ${Math.max(0,Math.ceil(safeHP))}/750 · 🛡️ Твой ${Math.max(0,Math.ceil(ownSafeHP))}/750${performance.now()<ownSafeShieldUntil?' · 🛡️ ЩИТ ТВОЕГО СЕЙФА':''}`;return `☠️ ${10-enemies.filter(e=>e.hp>0).length}/10`}
 function maxAmmo(){return f().id==='max'?4:3}
 function hud(){$('ammo').textContent=ammo+'/'+maxAmmo();$('hp').textContent=Math.max(0,Math.ceil(hp));$('healthbar').style.width=Math.max(0,hp/f().hp*100)+'%';$('objective').textContent=objective()}
-function updateSuperHud(){const b=$('superButton');if(!b)return;const ready=superHits>=7;b.disabled=!ready;b.style.opacity=ready?'1':'.65';b.textContent=ready?'⭐ УЛЬТА ГОТОВА · НАЖМИ!':`⭐ УЛЬТА · ${superHits}/7 ПОПАДАНИЙ`;}
+function updateSuperHud(){const b=$('superButton');if(!b)return;const ready=superHits>=7;b.disabled=!ready;b.style.opacity=ready?'1':'.65';b.textContent=ready?'⭐ УЛЬТА ГОТОВА · НАЖМИ!':`⭐ УЛЬТА · ${superHits}/7 ПОПАДАНИЙ`;$('superAimWrap').classList.toggle('ready',ready);}
 function chargeSuper(){if(superHits<7){superHits++;updateSuperHud();}}
 function useSuper(){
- if(!running||superHits<7)return;superHits=0;updateSuperHud();const x=f(),a=Math.atan2(aim.y,aim.x),now=performance.now();
+ if(!running||superHits<7)return;superHits=0;updateSuperHud();const x=f(),a=Math.atan2(superAim.y,superAim.x),now=performance.now();
  const hit=(e,dmg)=>{if(e&&e.hp>0)e.hp-=dmg};
  const area=(radius,dmg)=>{for(const e of enemies)if(e.hp>0&&Math.hypot(e.x-player.x,e.y-player.y)<=radius)hit(e,dmg);effects.push({x:player.x,y:player.y,life:20,r:radius});};
  const volley=(count,spread,dmg,extra={})=>{for(let i=0;i<count;i++)shots.push({x:player.x,y:player.y,vx:Math.cos(a+(i-(count-1)/2)*spread)*8,vy:Math.sin(a+(i-(count-1)/2)*spread)*8,life:x.range/8+8,damage:dmg,r:7,noCharge:true,...extra});};
@@ -308,7 +310,7 @@ function start(){if(mode==='knockout'&&!knockoutMatchActive){knockoutMatchActive
 let count=mode==='showdown'?10:mode==='knockout'?(rankedRun?5:3):mode==='gems'?6:5;
 enemies=Array.from({length:count},(_,i)=>{let a=i*Math.PI*2/count;const enemyHp=rankedRun?75:55;return{x:300+Math.cos(a)*220,y:300+Math.sin(a)*220,hp:enemyHp,max:enemyHp,cd:Math.random()*80,style:i%3,strafe:i%2?1:-1}});
 if(mode==='knockout'||mode==='gems'||mode==='heist'){allies=[{x:260,y:345,hp:100,max:100,cd:25},{x:340,y:345,hp:100,max:100,cd:55}];}
-$('arenaName').textContent=modes[mode].icon+' '+modes[mode].name+(mode==='knockout'?' — Раунд '+knockoutRound+'/3':'')+' — '+f().name;$('status').textContent=(mode==='knockout'?'Счёт раундов: ты '+knockoutPlayerWins+' : '+knockoutEnemyWins+' противники. Нужно выиграть 2 раунда. ':modes[mode].goal)+((mode==='knockout'||mode==='gems'||mode==='heist')?' · 2 союзника самостоятельно ищут и атакуют врагов!':'')+' · Левый джойстик — движение, правый — прицел и выстрел.';$('reloadLabel').textContent='Готов к бою';$('reloadbar').style.width='0%';hud();show('arenaScreen');last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop)}
+$('arenaName').textContent=modes[mode].icon+' '+modes[mode].name+(mode==='knockout'?' — Раунд '+knockoutRound+'/3':'')+' — '+f().name;$('status').textContent=(mode==='knockout'?'Счёт раундов: ты '+knockoutPlayerWins+' : '+knockoutEnemyWins+' противники. Нужно выиграть 2 раунда. ':modes[mode].goal)+((mode==='knockout'||mode==='gems'||mode==='heist')?' · 2 союзника самостоятельно ищут и атакуют врагов!':'')+' · Левый джойстик — движение, правый — прицел и выстрел. После зарядки появится отдельный джойстик прицела ульты.';$('reloadLabel').textContent='Готов к бою';$('reloadbar').style.width='0%';hud();show('arenaScreen');last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop)}
 function reload(){if(!running||reloading||ammo===maxAmmo())return;reloading=true;const token=++reloadToken;reloadStart=performance.now();const duration=f().reload;$('reloadLabel').textContent='Автоперезарядка…';function tick(){if(!running||!reloading||token!==reloadToken)return;let p=Math.min(100,(performance.now()-reloadStart)/duration*100);$('reloadbar').style.width=p+'%';if(p<100){requestAnimationFrame(tick);return}ammo=maxAmmo();reloading=false;hud();$('reloadLabel').textContent='Заряжено!';$('reloadbar').style.width='0%'}requestAnimationFrame(tick)}
 function shoot(){
 if(!running)return;if(reloading||ammo<=0){reload();return}
@@ -322,16 +324,12 @@ if(x.id==='colt'){
     addShot(a+(i-3.5)*x.spread/7,x.damage/16,volley*7);
 }else if(x.id==='dynamike'){
   addShot(a,x.damage,0,{explosive:true});
-}else if(x.id==='bull'||x.id==='poco'){
-  const side={x:-Math.sin(a),y:Math.cos(a)};
-  const pattern=[[-12,-4],[0,-4],[12,-4],[-6,4],[6,4],[0,12]];
-  for(const [lateral,forward] of pattern){
-    const shot= {x:player.x+side.x*lateral+Math.cos(a)*forward,
-      y:player.y+side.y*lateral+Math.sin(a)*forward,
-      vx:Math.cos(a)*8,vy:Math.sin(a)*8,life:x.range/8,
-      damage:x.damage/6,r:6,pierce:x.id==='poco'};
-    shots.push(shot);
-  }
+}else if(x.id==='bull'){
+  // Булл: четыре снаряда веером в секторе 60°.
+  for(let i=0;i<4;i++){const ang=a+(i-1.5)*(Math.PI/3)/3;addShot(ang,x.damage/4);}
+}else if(x.id==='poco'){
+  // Поко: восемь пробивающих снарядов веером в секторе 80°.
+  for(let i=0;i<8;i++){const ang=a+(i-3.5)*(Math.PI*4/9)/7;addShot(ang,x.damage/8,0,{pierce:true});}
 }else if(x.id==='jacky'){
   const radius=78;
   for(const e of enemies)if(e.hp>0&&Math.hypot(e.x-player.x,e.y-player.y)<=radius){e.hp-=x.damage;chargeSuper();}
@@ -611,15 +609,16 @@ if(mode==='knockout'||mode==='gems'||mode==='heist'){
   }
 }
 if(aiming){ctx.save();ctx.translate(player.x,player.y);ctx.rotate(Math.atan2(aim.y,aim.x));ctx.strokeStyle='#fff3a8';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(f().range,0);ctx.stroke();ctx.restore()}
+if(superHits>=7){const sa=Math.atan2(superAim.y,superAim.x),sr=Math.min(f().range,230);ctx.save();ctx.translate(player.x,player.y);ctx.rotate(sa);ctx.setLineDash([10,7]);ctx.strokeStyle='#e2b7ff';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(sr,0);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#e2b7ff55';ctx.beginPath();ctx.arc(sr,0,18,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#f4dcff';ctx.lineWidth=2;ctx.stroke();ctx.restore()}
 circle(player.x,player.y,17,'#2878e8');circle(player.x+aim.x*10,player.y+aim.y*10,6,'#ffe18a');hud();
 let won=mode==='gems'?crystals>=10:mode==='heist'?safeHP<=0:!enemies.some(e=>e.hp>0);
 if(hp<=0||(mode==='heist'&&ownSafeHP<=0)){if(mode==='knockout'){handleKnockoutRound(false);return}finish(false);return}if(won){if(mode==='knockout'){handleKnockoutRound(true);return}finish(true);return}raf=requestAnimationFrame(loop)}
 function handleKnockoutRound(win){if(!knockoutMatchActive)return;running=false;reloading=false;reloadToken++;if(win)knockoutPlayerWins++;else knockoutEnemyWins++;if(knockoutPlayerWins>=2||knockoutEnemyWins>=2){const matchWon=knockoutPlayerWins>=2;knockoutMatchActive=false;finish(matchWon);return}knockoutRound++;$('arenaName').textContent='💥 НОКАУТ — Раунд '+knockoutRound+'/3';$('status').textContent='Раунд '+(knockoutRound-1)+' завершён! Счёт: ты '+knockoutPlayerWins+' : '+knockoutEnemyWins+' противники. Следующий раунд скоро начнётся.';hud();knockoutNextTimer=setTimeout(()=>{knockoutNextTimer=null;if(mode==='knockout'&&!knockoutMatchActive)return;start()},1500)}
 function finish(win){running=false;reloading=false;reloadToken++;if(win)save.wins=(Number(save.wins)||0)+1;else save.losses=(Number(save.losses)||0)+1;if(rankedRun){const change=win?25:-10;save.rankPoints=Math.max(0,(Number(save.rankPoints)||0)+change);let rankBonus=0;for(let milestone=100;milestone<=save.rankPoints;milestone+=100){if(!save.rankClaimed.includes(milestone)){save.rankClaimed.push(milestone);rankBonus+=100;}}save.coins+=rankBonus;if(win){save.trophies+=10;save.coins+=25;$('endTitle').textContent='🏅 РАНГОВАЯ ПОБЕДА!';$('endMessage').textContent='Команда победила!'+(mode==='knockout'?' Счёт раундов '+knockoutPlayerWins+':'+knockoutEnemyWins+'. ':' ')+'+25 ранговых очков, +10 кубков и +25 монет.'+(rankBonus?' Бонус за ранговые рубежи: +'+rankBonus+' монет.':'')+' Текущий ранг: '+rankDetails().name+'.'}else{$('endTitle').textContent='РАНГОВОЕ ПОРАЖЕНИЕ';$('endMessage').textContent='В этот раз не получилось.'+(mode==='knockout'?' Счёт раундов '+knockoutPlayerWins+':'+knockoutEnemyWins+'. ':' ')+'−10 ранговых очков.'+(rankBonus?' Бонус за ранговые рубежи: +'+rankBonus+' монет.':'')+' Текущий ранг: '+rankDetails().name+'.'}persist();}else if(win){save.trophies+=10;save.coins+=25;persist();$('endTitle').textContent='🏆 ПОБЕДА!';$('endMessage').textContent='Цель режима выполнена!'+(mode==='knockout'?' Счёт раундов '+knockoutPlayerWins+':'+knockoutEnemyWins+'. ':' ')+'+10 кубков и +25 монет.'}else{$('endTitle').textContent='БИТВА ОКОНЧЕНА';$('endMessage').textContent=(mode==='knockout'?'Счёт раундов '+knockoutPlayerWins+':'+knockoutEnemyWins+'. ':'')+'Попробуй ещё раз!';persist()}show('endScreen')}
-function pad(stick,knob,type){let active=false,id=null;function update(e){let r=stick.getBoundingClientRect(),dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2),len=Math.hypot(dx,dy),max=35;if(len>max){dx=dx/len*max;dy=dy/len*max}knob.style.transform=`translate(${dx}px,${dy}px)`;let vx=dx/max,vy=dy/max;if(type==='move')move={x:vx,y:vy};else if(Math.hypot(vx,vy)>.15){aim={x:vx/Math.hypot(vx,vy),y:vy/Math.hypot(vx,vy)};aiming=true}}
-function end(){if(!active)return;active=false;try{stick.releasePointerCapture(id)}catch(e){}knob.style.transform='';if(type==='move')move={x:0,y:0};else{aiming=false;if(running)shoot()}}
-stick.addEventListener('pointerdown',e=>{if(!running)return;active=true;id=e.pointerId;stick.setPointerCapture(id);update(e)});stick.addEventListener('pointermove',e=>{if(active)update(e)});stick.addEventListener('pointerup',end);stick.addEventListener('pointercancel',end)}
-pad($('moveStick'),$('moveKnob'),'move');pad($('aimStick'),$('aimKnob'),'aim');$('superButton').onclick=useSuper;
+function pad(stick,knob,type){let active=false,id=null;function update(e){let r=stick.getBoundingClientRect(),dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2),len=Math.hypot(dx,dy),max=35;if(len>max){dx=dx/len*max;dy=dy/len*max}knob.style.transform=`translate(${dx}px,${dy}px)`;let vx=dx/max,vy=dy/max;if(type==='move')move={x:vx,y:vy};else if(type==='superAim'){if(superHits>=7&&Math.hypot(vx,vy)>.15){superAim={x:vx/Math.hypot(vx,vy),y:vy/Math.hypot(vx,vy)};superAiming=true}}else if(Math.hypot(vx,vy)>.15){aim={x:vx/Math.hypot(vx,vy),y:vy/Math.hypot(vx,vy)};aiming=true}}
+function end(){if(!active)return;active=false;try{stick.releasePointerCapture(id)}catch(e){}knob.style.transform='';if(type==='move')move={x:0,y:0};else if(type==='superAim'){superAiming=false}else{aiming=false;if(running)shoot()}}
+stick.addEventListener('pointerdown',e=>{if(!running||(type==='superAim'&&superHits<7))return;active=true;id=e.pointerId;stick.setPointerCapture(id);update(e)});stick.addEventListener('pointermove',e=>{if(active)update(e)});stick.addEventListener('pointerup',end);stick.addEventListener('pointercancel',end)}
+pad($('moveStick'),$('moveKnob'),'move');pad($('aimStick'),$('aimKnob'),'aim');pad($('superAimStick'),$('superAimKnob'),'superAim');$('superButton').onclick=useSuper;
 // Управление на компьютере: WASD/стрелки, мышь для прицела и ЛКМ для выстрела.
 const pressedKeys=new Set();
 function updateKeyboardMove(){
