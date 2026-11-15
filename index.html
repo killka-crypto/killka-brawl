@@ -300,7 +300,7 @@ function updateSuperHud(){const ready=superHits>=7;const panel=$('superChargePan
 function sandyCovers(unit){return !!(sandyStorm&&performance.now()<sandyStorm.until&&unit&&Math.hypot(unit.x-sandyStorm.x,unit.y-sandyStorm.y)<=sandyStorm.r);}
 function chargeSuper(){if(superHits<7){superHits++;updateSuperHud();}}
 function useSuper(){
- if(!running||superHits<7)return;superHits=0;updateSuperHud();const x=f(),a=Math.atan2(superAim.y,superAim.x),now=performance.now();
+ if(!running||hp<=0||playerRespawnAt||superHits<7)return;superHits=0;updateSuperHud();const x=f(),a=Math.atan2(superAim.y,superAim.x),now=performance.now();
  const hit=(e,dmg)=>{if(e&&e.hp>0)e.hp-=dmg};
  const area=(radius,dmg)=>{for(const e of enemies)if(e.hp>0&&Math.hypot(e.x-player.x,e.y-player.y)<=radius)hit(e,dmg);effects.push({x:player.x,y:player.y,life:20,r:radius});};
  const volley=(count,spread,dmg,extra={})=>{for(let i=0;i<count;i++)shots.push({x:player.x,y:player.y,vx:Math.cos(a+(i-(count-1)/2)*spread)*8,vy:Math.sin(a+(i-(count-1)/2)*spread)*8,life:x.range/8+8,damage:dmg,r:7,noCharge:true,...extra});};
@@ -389,7 +389,7 @@ if(mode==='knockout'||mode==='gems'||mode==='heist'){allies=[0,1].map((i)=>{cons
 $('arenaName').textContent=modes[mode].icon+' '+modes[mode].name+(mode==='knockout'?' — Раунд '+knockoutRound+'/3':'')+' — '+f().name;$('status').textContent=(mode==='knockout'?'Счёт раундов: ты '+knockoutPlayerWins+' : '+knockoutEnemyWins+' противники. Нужно выиграть 2 раунда. ':modes[mode].goal)+((mode==='knockout'||mode==='gems'||mode==='heist')?' · 2 союзника самостоятельно ищут и атакуют врагов!':'')+' · Левый джойстик — движение, правый — прицел и выстрел. После зарядки прицел ульты активируется отдельно; отпусти его, чтобы применить ульту.';$('reloadLabel').textContent='Готов к бою';$('reloadbar').style.width='0%';hud();applyButtonLayout();show('arenaScreen');last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop)}
 function reload(){if(!running||reloading||ammo===maxAmmo())return;reloading=true;const token=++reloadToken;reloadStart=performance.now();const duration=f().reload;$('reloadLabel').textContent='Автоперезарядка…';function tick(){if(!running||!reloading||token!==reloadToken)return;let p=Math.min(100,(performance.now()-reloadStart)/duration*100);$('reloadbar').style.width=p+'%';if(p<100){requestAnimationFrame(tick);return}ammo=maxAmmo();reloading=false;hud();$('reloadLabel').textContent='Заряжено!';$('reloadbar').style.width='0%'}requestAnimationFrame(tick)}
 function shoot(){
-if(!running)return;if(reloading||ammo<=0){reload();return}
+if(!running||hp<=0||playerRespawnAt)return;if(reloading||ammo<=0){reload();return}
 ammo--;let x=f(),a=Math.atan2(aim.y,aim.x),now=performance.now();if(x.id==='leon')leonInvisibleUntil=0;
 const beaPowered=x.id==='bea'&&beaBoostReady;if(beaPowered)beaBoostReady=false;
 const addShot=(angle,damage,wait=0,extra={})=>shots.push({x:player.x,y:player.y,vx:Math.cos(angle)*8,vy:Math.sin(angle)*8,life:x.range/8,damage,r:6,wait,...extra});
