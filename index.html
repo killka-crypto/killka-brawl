@@ -40,7 +40,8 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:1/1;background:#579b55;
 /* KILKACELL startup screen */
 #kilkacellLoading{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#050505;color:#fff;opacity:1;visibility:visible;transition:opacity .45s ease,visibility .45s ease;padding:24px;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
 #kilkacellLoading.done{opacity:0;visibility:hidden;pointer-events:none}
-#kilkacellLoading .loading-name{font-size:clamp(38px,10vw,66px);font-weight:1000;letter-spacing:.045em;text-transform:lowercase;color:#fff;text-shadow:0 0 24px #ffffff35;animation:kilkaPulse 1.5s ease-in-out infinite}
+#kilkacellLoading .loading-name{display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Rockwell,'Roboto Slab','Arial Black',Georgia,serif;font-size:clamp(76px,17vw,132px);font-weight:1000;line-height:.72;letter-spacing:-.075em;text-transform:uppercase;color:#fff;text-shadow:0 0 24px #ffffff25;animation:kilkaPulse 1.5s ease-in-out infinite;transform:scaleX(.96)}
+#kilkacellLoading .loading-name span{display:block;min-width:2.5em;text-align:center}
 #kilkacellLoading .loading-track{position:absolute;left:12%;right:12%;bottom:calc(42px + env(safe-area-inset-bottom));height:5px;border-radius:9px;background:#292929;overflow:hidden}
 #kilkacellLoading .loading-fill{height:100%;width:0;border-radius:9px;background:#fff;box-shadow:0 0 12px #fff;animation:kilkaLoad 2.15s cubic-bezier(.2,.7,.2,1) forwards}
 @keyframes kilkaLoad{0%{width:0}35%{width:38%}75%{width:78%}100%{width:100%}}
@@ -51,7 +52,7 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:1/1;background:#579b55;
 </head>
 <body>
 <div id="kilkacellLoading" aria-label="Загрузка kilkacell">
-  <div class="loading-name">kilkacell</div>
+  <div class="loading-name" aria-label="kilkacell"><span>kil</span><span>kac</span><span>ell</span></div>
   <div class="loading-track"><div class="loading-fill"></div></div>
 </div>
 <div id="app">
