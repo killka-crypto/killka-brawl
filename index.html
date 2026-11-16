@@ -104,6 +104,26 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:1/1;background:#579b55;
   #arenaScreen>#back{display:none!important}
 }
 
+
+/* Fix: keep the arena square on landscape phones instead of stretching it. */
+@media (orientation:landscape) and (pointer:coarse) {
+  #arenaScreen:not(.hidden) {
+    background:#18243a!important;
+  }
+  #arenaScreen>#field {
+    position:absolute!important;
+    left:50%!important; top:50%!important; right:auto!important; bottom:auto!important;
+    transform:translate(-50%,-50%)!important;
+    width:min(100vw,100dvh)!important;
+    height:min(100vw,100dvh)!important;
+    max-width:min(100vw,100dvh)!important;
+    max-height:min(100vw,100dvh)!important;
+    aspect-ratio:1/1!important;
+    object-fit:fill!important;
+    border:0!important; border-radius:0!important;
+  }
+}
+
 </style>
 </head>
 <body>
