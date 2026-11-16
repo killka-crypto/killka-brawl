@@ -48,6 +48,34 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:1/1;background:#579b55;
 @keyframes kilkaPulse{0%,100%{opacity:1}50%{opacity:.78}}
 @media(prefers-reduced-motion:reduce){#kilkacellLoading .loading-name{animation:none}#kilkacellLoading .loading-fill{animation-duration:.5s}}
 
+
+/* Landscape-first mobile layout */
+@media (orientation:landscape) and (max-height:650px) and (pointer:coarse){
+  body{overflow-x:hidden} #app{max-width:1180px;width:100%;padding:7px;gap:7px}
+  #home{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:8px;align-items:start}
+  #home>.panel:first-child,#home>.row,#home>#rankPanel,#home>.panel:last-child{grid-column:1/-1}
+  #home>.panel:nth-child(2),#home>.panel:nth-child(3){min-width:0}
+  #home .battle-card-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  #arenaScreen{display:grid;grid-template-columns:minmax(0,1fr) 150px;grid-template-rows:auto auto auto auto auto auto 1fr auto;gap:5px;align-items:center}
+  #arenaScreen>.arenahead,#arenaScreen>.bar:nth-of-type(1){grid-column:1/-1}
+  #arenaScreen>#field{grid-column:1;grid-row:3;width:min(100%,calc(100vh - 155px));height:auto;max-height:calc(100vh - 155px);aspect-ratio:1/1;justify-self:center}
+  #arenaScreen>.row{grid-column:1;grid-row:4}
+  #arenaScreen>.bar:nth-of-type(2){grid-column:1;grid-row:5}
+  #arenaScreen>#superChargePanel{grid-column:1;grid-row:6}
+  #arenaScreen>#status{grid-column:1;grid-row:7}
+  #arenaScreen>.small{text-align:center;grid-column:1;grid-row:8}
+  #arenaScreen>.controls{grid-column:2;grid-row:3/ span 3;flex-direction:column;justify-content:space-evenly;gap:8px;padding:0}
+  #arenaScreen .stick{width:88px;height:88px}
+  #arenaScreen .knob{left:22px;top:22px;width:40px;height:40px}
+  #arenaScreen>.super-aim-wrap{grid-column:2;grid-row:6/ span 2}
+  #arenaScreen>#back{grid-column:1/-1}
+  #kilkacellLoading .loading-name{font-size:clamp(54px,12vh,90px)}
+}
+#landscapePrompt{display:none;position:fixed;inset:0;z-index:100000;background:#10152d;color:white;align-items:center;justify-content:center;text-align:center;padding:28px}
+#landscapePrompt .prompt-card{max-width:340px;background:#20294b;border:2px solid #6574ae;border-radius:18px;padding:25px;font-weight:900}
+#landscapePrompt .rotate-icon{font-size:58px;display:block;margin-bottom:12px;animation:rotateHint 1.8s ease-in-out infinite}
+@keyframes rotateHint{0%,100%{transform:rotate(0)}50%{transform:rotate(90deg)}}
+@media (orientation:portrait) and (max-width:700px) and (pointer:coarse){#landscapePrompt{display:flex}}
 </style>
 </head>
 <body>
@@ -56,6 +84,7 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:1/1;background:#579b55;
   <div class="loading-name" aria-label="kilkacell"><span>kil</span><span>kac</span><span>ell</span></div>
   <div class="loading-track"><div class="loading-fill"></div></div>
 </div>
+<div id="landscapePrompt"><div class="prompt-card"><span class="rotate-icon">📱</span>ПОВЕРНИ УСТРОЙСТВО<br>ИГРА РАБОТАЕТ В ГОРИЗОНТАЛЬНОМ РЕЖИМЕ</div></div>
 <div id="app">
 <div class="top"><div><span class="gold">KILLKA</span> BRAWL</div><div>🪙 <span id="coins">100</span>　🏆 <span id="trophies">0</span></div></div>
 <section id="home" class="screen">
@@ -275,6 +304,10 @@ $('profileNameInput').addEventListener('input',()=>{const input=$('profileNameIn
 $('saveProfileName').onclick=()=>{const name=$('profileNameInput').value.replace(/[^\p{L}]/gu,'').slice(0,10);if(!name){$('profileNameStatus').textContent='Введи имя из букв.';return}save.profileName=name;$('profileNameStatus').textContent='Имя профиля сохранено!';persist();renderProfile()};
 $('redeemCodeButton').onclick=()=>{const code=$('redeemCodeInput').value.trim().toUpperCase();if(!code){$('redeemCodeStatus').textContent='Сначала введи код.';return}if(code==='ADMINTXT'){if(save.isAdmin){$('redeemCodeStatus').textContent='Статус ADMIN уже активирован!';return}save.isAdmin=true;$('redeemCodeStatus').textContent='✅ Код активирован! Твоё имя теперь зелёное.';persist();renderProfile();return}if(code==='KILLKA'){save.usedPromoCodes=Array.isArray(save.usedPromoCodes)?save.usedPromoCodes:[];if(save.usedPromoCodes.includes('KILLKA')){$('redeemCodeStatus').textContent='❌ Этот код уже использован.';return}save.usedPromoCodes.push('KILLKA');save.profileName='killka';$('redeemCodeStatus').textContent='✅ Код активирован! Имя изменено на killka.'+(save.isAdmin?' Статус ADMIN сохранён.':'');persist();renderProfile();return}if(code==='5000MONET'){save.usedPromoCodes=Array.isArray(save.usedPromoCodes)?save.usedPromoCodes:[];if(save.usedPromoCodes.includes('5000MONET')){$('redeemCodeStatus').textContent='❌ Этот код уже использован.';return}save.usedPromoCodes.push('5000MONET');save.coins=(Number(save.coins)||0)+5000;$('redeemCodeStatus').textContent='✅ Код активирован! Начислено 5000 монет.';persist();return}$('redeemCodeStatus').textContent='❌ Такого кода нет.'};
 $('redeemCodeInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('redeemCodeButton').click()});
+let killkaOrientationRequested=false;
+function requestLandscape(){if(killkaOrientationRequested)return;killkaOrientationRequested=true;try{if(screen.orientation&&screen.orientation.lock){screen.orientation.lock('landscape').catch(()=>{});}}catch(e){}}
+document.addEventListener('pointerdown',requestLandscape,{once:true,passive:true});
+document.addEventListener('click',requestLandscape,{once:true});
 function show(id){['home','profileScreen','modeRevealScreen','fighterSelectScreen','countdownScreen','arenaScreen','settingsScreen','shopScreen','upgradeScreen','roadScreen','boxScreen','endScreen'].forEach(x=>$(x).classList.add('hidden'));$(id).classList.remove('hidden');if(window.syncKillkaMenuMusic)window.syncKillkaMenuMusic(id)}
 let computerControlsEnabled=localStorage.getItem('kbComputerControls')==='true';
 function refreshComputerControlsSetting(){const input=$('computerControlsToggle');if(input)input.checked=computerControlsEnabled;$('computerControlsStatus').textContent=computerControlsEnabled?'Управление с клавиатуры и мыши включено.':'Управление с клавиатуры и мыши выключено.';}
