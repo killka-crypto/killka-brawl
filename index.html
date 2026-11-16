@@ -1,13 +1,4 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#10152d">
-<title>KILLKA BRAWL</title>
-<style>
-*{box-sizing:border-box}body{margin:0;background:#10152d;color:#fff;font-family:system-ui,-apple-system,sans-serif}
-#app{max-width:720px;margin:auto;padding:12px;display:flex;flex-direction:column;gap:12px}
+qwidth:720px;margin:auto;padding:12px;display:flex;flex-direction:column;gap:12px}
 .top{display:flex;justify-content:space-between;background:#20294b;padding:12px;border-radius:12px;font-weight:900}
 .gold{color:#ffd45a}button{border:1px solid #6574ae;border-radius:10px;padding:10px 12px;background:#303e70;color:white;font-weight:800;font-size:14px}
 button:active{transform:scale(.98)}button.active{background:#d79b28;color:#17152b;border-color:#ffe08a}
@@ -76,6 +67,34 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:1/1;background:#579b55;
 #landscapePrompt .rotate-icon{font-size:58px;display:block;margin-bottom:12px;animation:rotateHint 1.8s ease-in-out infinite}
 @keyframes rotateHint{0%,100%{transform:rotate(0)}50%{transform:rotate(90deg)}}
 @media (orientation:portrait) and (max-width:700px) and (pointer:coarse){#landscapePrompt{display:flex}}
+
+/* KILLKA BRAWL: immersive full-screen battle controls */
+@media (orientation:landscape) and (pointer:coarse){
+  body:has(#arenaScreen:not(.hidden)){overflow:hidden!important}
+  #app:has(#arenaScreen:not(.hidden)){width:100vw!important;max-width:none!important;height:100dvh!important;margin:0!important;padding:0!important;gap:0!important}
+  #app:has(#arenaScreen:not(.hidden))>.top{display:none!important}
+  #arenaScreen:not(.hidden){position:fixed!important;inset:0!important;z-index:500!important;display:block!important;width:100vw!important;height:100dvh!important;overflow:hidden!important;padding:0!important;margin:0!important;gap:0!important;background:#579b55}
+  #arenaScreen>.arenahead{position:absolute!important;z-index:8;top:env(safe-area-inset-top,0px);left:10px;right:10px;padding:5px 10px;border-radius:0 0 10px 10px;background:#10152dcc;flex-wrap:nowrap}
+  #arenaScreen>.bar:nth-of-type(1){position:absolute;z-index:8;top:38px;left:10px;right:10px;height:6px}
+  #arenaScreen>#field{position:absolute!important;inset:0!important;width:100vw!important;height:100dvh!important;max-width:none!important;max-height:none!important;aspect-ratio:auto!important;border:0!important;border-radius:0!important;display:block}
+  #arenaScreen>.row{position:absolute;z-index:8;top:52px;left:12px;right:12px;width:auto;pointer-events:none;text-shadow:0 1px 3px #000}
+  #arenaScreen>.bar:nth-of-type(2){position:absolute;z-index:8;top:76px;left:12px;right:12px;height:5px}
+  #arenaScreen>#superChargePanel{position:absolute;z-index:8;top:88px;left:12px;width:min(220px,34vw);padding:5px 8px}
+  #arenaScreen>#status,#arenaScreen>.small{display:none!important}
+  #arenaScreen>.controls{position:absolute!important;z-index:10;inset:0!important;display:block!important;padding:0!important;pointer-events:none}
+  #arenaScreen .control-move-item,#arenaScreen .control-aim-item{position:absolute!important;bottom:calc(12px + env(safe-area-inset-bottom))!important;pointer-events:auto}
+  #arenaScreen .control-move-item{left:calc(14px + env(safe-area-inset-left))!important}
+  #arenaScreen .control-aim-item{right:calc(14px + env(safe-area-inset-right))!important}
+  #arenaScreen .control-move-item>.small,#arenaScreen .control-aim-item>.small{display:none!important}
+  #arenaScreen .stick{width:clamp(76px,15vh,112px)!important;height:clamp(76px,15vh,112px)!important}
+  #arenaScreen .knob{left:calc(50% - 20px)!important;top:calc(50% - 20px)!important}
+  #arenaScreen>.super-aim-wrap{position:absolute!important;z-index:11;right:calc(118px + env(safe-area-inset-right))!important;bottom:calc(126px + env(safe-area-inset-bottom))!important;display:none;padding:0!important;pointer-events:auto}
+  #arenaScreen>.super-aim-wrap.ready{display:flex!important}
+  #arenaScreen>.super-aim-wrap .small{display:none!important}
+  #arenaScreen>.super-aim-wrap .stick{width:clamp(62px,11vh,82px)!important;height:clamp(62px,11vh,82px)!important}
+  #arenaScreen>#back{display:none!important}
+}
+
 </style>
 </head>
 <body>
