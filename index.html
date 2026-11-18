@@ -486,7 +486,7 @@ $('saveProfileName').onclick=()=>{const name=$('profileNameInput').value.replace
 $('redeemCodeButton').onclick=()=>{const code=$('redeemCodeInput').value.trim().toUpperCase();if(!code){$('redeemCodeStatus').textContent='Сначала введи код.';return}if(code==='ADMINTXT'){if(save.isAdmin){$('redeemCodeStatus').textContent='Статус ADMIN уже активирован!';return}save.isAdmin=true;$('redeemCodeStatus').textContent='✅ Код активирован! Твоё имя теперь зелёное.';persist();renderProfile();return}if(code==='KILLKA'){save.usedPromoCodes=Array.isArray(save.usedPromoCodes)?save.usedPromoCodes:[];if(save.usedPromoCodes.includes('KILLKA')){$('redeemCodeStatus').textContent='❌ Этот код уже использован.';return}save.usedPromoCodes.push('KILLKA');save.profileName='killka';$('redeemCodeStatus').textContent='✅ Код активирован! Имя изменено на killka.'+(save.isAdmin?' Статус ADMIN сохранён.':'');persist();renderProfile();return}if(code==='5000MONET'){save.usedPromoCodes=Array.isArray(save.usedPromoCodes)?save.usedPromoCodes:[];if(save.usedPromoCodes.includes('5000MONET')){$('redeemCodeStatus').textContent='❌ Этот код уже использован.';return}save.usedPromoCodes.push('5000MONET');save.coins=(Number(save.coins)||0)+5000;$('redeemCodeStatus').textContent='✅ Код активирован! Начислено 5000 монет.';persist();return}$('redeemCodeStatus').textContent='❌ Такого кода нет.'};
 $('redeemCodeInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('redeemCodeButton').click()});
 // Вертикальная ориентация: не блокируем поворот устройства.
-function show(id){['home','fighterMenuScreen','profileScreen','modeRevealScreen','fighterSelectScreen','countdownScreen','arenaScreen','settingsScreen','shopScreen','upgradeScreen','roadScreen','boxScreen','endScreen'].forEach(x=>$(x).classList.add('hidden'));$(id).classList.remove('hidden');if(window.syncKillkaMenuMusic)window.syncKillkaMenuMusic(id)}
+function show(id){['home','fighterMenuScreen','profileScreen','modeRevealScreen','fighterSelectScreen','countdownScreen','arenaScreen','settingsScreen','shopScreen','upgradeScreen','roadScreen','boxScreen','endScreen','leaderboardScreen'].forEach(x=>$(x)?.classList.add('hidden'));$(id)?.classList.remove('hidden');if(window.syncKillkaMenuMusic)window.syncKillkaMenuMusic(id)}
 let computerControlsEnabled=localStorage.getItem('kbComputerControls')==='true';
 function refreshComputerControlsSetting(){const input=$('computerControlsToggle');if(input)input.checked=computerControlsEnabled;$('computerControlsStatus').textContent=computerControlsEnabled?'Управление с клавиатуры и мыши включено.':'Управление с клавиатуры и мыши выключено.';}
 
@@ -683,11 +683,17 @@ if(x.id==='colt'){
   // Роза наносит удар тремя широкими короткими ударами листьев.
   for(let i=0;i<3;i++)addShot(a+(i-1)*.30,x.damage/3,0,{r:8,pierce:true});
 }else if(x.id==='bo'){
-  for(let i=0;i<3;i++)addShot(a+(i-1)*Math.PI/4,x.damage/3,i*42,{r:7,boArrow:true});
+  // Бо выпускает три стрелы с интервалом 0,2 секунды.
+  for(let i=0;i<3;i++)addShot(a+(i-1)*Math.PI/4,x.damage/3,i*200,{r:7,boArrow:true});
 }else if(x.id==='lou'){
-  for(let i=0;i<2;i++)addShot(a,x.damage/2,i*36,{r:7,iceBolt:true});
+  // Лу выпускает ледяные снаряды по очереди с интервалом 0,2 секунды.
+  for(let i=0;i<2;i++)addShot(a,x.damage/2,i*200,{r:7,iceBolt:true});
 }else if(x.id==='tick'){
-  for(let i=0;i<3;i++)addShot(a+i*Math.PI*2/3,x.damage/3,0,{explosive:true,blastRadius:40,tickMine:true,life:180});
+  // Три мины Тика падают плотной группой перед бойцом по направлению прицела.
+  const cx=Math.max(18,Math.min(582,player.x+Math.cos(a)*105));
+  const cy=Math.max(18,Math.min(582,player.y+Math.sin(a)*105));
+  const sideX=-Math.sin(a),sideY=Math.cos(a);
+  for(let i=0;i<3;i++)puddles.push({kind:'tickMine',x:cx+sideX*(i-1)*14,y:cy+sideY*(i-1)*14,r:10,life:3000,maxLife:3000,damage:x.damage});
 }else if(x.id==='carl'){
   addShot(a,x.damage,0,{r:9,pierce:true,carlPickaxe:true,returning:true,startX:player.x,startY:player.y,phase:'out',maxTravel:x.range,travelled:0,returnSpeed:9,hitTargets:[]});
 }else{
@@ -965,6 +971,19 @@ for(const puddle of puddles){
     const stepped=alive.find(e=>e.hp>0&&Math.hypot(e.x-puddle.x,e.y-puddle.y)<=puddle.r+16);
     if(stepped){for(const e of alive)if(e.hp>0&&Math.hypot(e.x-puddle.x,e.y-puddle.y)<=62)e.hp-=puddle.damage;effects.push({x:puddle.x,y:puddle.y,life:20,r:62});puddle.life=0;}
     else{ctx.fillStyle='#d9b34d';ctx.beginPath();ctx.arc(puddle.x,puddle.y,puddle.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#fff0a0';ctx.lineWidth=3;ctx.stroke();ctx.fillStyle='#4c3820';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.fillText('!',puddle.x,puddle.y+5);}
+  }else if(puddle.kind==='tickMine'){
+    const stepped=alive.some(e=>e.hp>0&&Math.hypot(e.x-puddle.x,e.y-puddle.y)<=puddle.r+15);
+    if(stepped||puddle.life<=0){
+      const radius=48;
+      for(const e of alive)if(e.hp>0&&Math.hypot(e.x-puddle.x,e.y-puddle.y)<=radius){e.hp-=puddle.damage;}
+      if(mode==='heist'&&Math.hypot(512-puddle.x,300-puddle.y)<=radius+35)damageSafe(puddle.damage);
+      effects.push({x:puddle.x,y:puddle.y,life:16,r:radius});puddle.life=0;
+    }else{
+      const pulse=.82+Math.sin(performance.now()/90)*.12;
+      ctx.fillStyle='rgba(255,205,75,.35)';ctx.beginPath();ctx.arc(puddle.x,puddle.y,puddle.r*2.0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#e9b94e';ctx.beginPath();ctx.arc(puddle.x,puddle.y,puddle.r*pulse,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='#fff0a0';ctx.lineWidth=2;ctx.stroke();
+    }
   }else if(puddle.kind==='lou'){
     for(const e of alive){
       if(e.hp<=0)continue;
