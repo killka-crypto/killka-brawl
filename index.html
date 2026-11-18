@@ -42,6 +42,7 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:1/1;background:#579b55;
 #kilkacellLoading.done{opacity:0;visibility:hidden;pointer-events:none}
 #kilkacellLoading .loading-name{display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Rockwell,'Roboto Slab','Arial Black',Georgia,serif;font-size:clamp(76px,17vw,132px);font-weight:1000;line-height:.72;letter-spacing:-.075em;text-transform:uppercase;color:#fff;text-shadow:0 0 24px #ffffff25;animation:kilkaPulse 1.5s ease-in-out infinite;transform:scaleX(.96)}
 #kilkacellLoading .loading-name span{display:block;min-width:2.5em;text-align:center}
+#kilkacellSkip{position:absolute;bottom:calc(62px + env(safe-area-inset-bottom));padding:11px 24px;border:1px solid #ffffff70;border-radius:24px;background:#ffffff18;color:#fff;font-size:14px;font-weight:900;letter-spacing:.5px;cursor:pointer;z-index:2}
 #kilkacellLoading .loading-track{position:absolute;left:12%;right:12%;bottom:calc(42px + env(safe-area-inset-bottom));height:5px;border-radius:9px;background:#292929;overflow:hidden}
 #kilkacellLoading .loading-fill{height:100%;width:0;border-radius:9px;background:#fff;box-shadow:0 0 12px #fff;animation:kilkaLoad 2.15s cubic-bezier(.2,.7,.2,1) forwards}
 @keyframes kilkaLoad{0%{width:0}35%{width:38%}75%{width:78%}100%{width:100%}}
@@ -211,6 +212,13 @@ body{background:#080b20;background-image:radial-gradient(ellipse at 50% 38%,#273
   #arenaScreen>.super-aim-wrap.ready{display:flex}
   #landscapePrompt{display:none!important}
 }
+
+#onlinePanel{position:fixed;inset:0;z-index:5000;background:#050817eF;display:flex;align-items:center;justify-content:center;padding:14px;overflow:auto}
+#onlinePanel.hidden{display:none!important}.online-card{width:min(560px,100%);max-height:92vh;overflow:auto;background:linear-gradient(145deg,#202b55,#10162f);border:2px solid #6578bd;border-radius:16px;padding:16px;box-shadow:0 16px 50px #000b}.online-card h2{margin:0 0 10px}.online-card input{width:100%;padding:12px;margin:5px 0 9px;border-radius:9px;border:1px solid #6678b8;background:#0c1230;color:white;font-size:16px}.online-actions{display:flex;gap:8px;flex-wrap:wrap}.online-actions button{flex:1;min-width:115px}.online-muted{color:#c4cbed;font-size:12px}.online-list{display:grid;gap:7px;margin:8px 0}.online-item{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#111a38;border:1px solid #42558f;border-radius:9px;padding:9px;font-size:13px}.online-item button{padding:7px 9px;font-size:12px}.online-section{border-top:1px solid #53649b;margin-top:12px;padding-top:10px}.online-status{font-size:13px;min-height:20px;color:#ffe28a;margin:7px 0}
+
+
+/* Временно отключён экран загрузки */
+#kilkacellLoading{display:none!important}
 </style>
 </head>
 <body>
@@ -218,6 +226,7 @@ body{background:#080b20;background-image:radial-gradient(ellipse at 50% 38%,#273
 <div id="kilkacellLoading" aria-label="Загрузка kilkacell">
   <div class="loading-name" aria-label="kilkacell"><span>kil</span><span>kac</span><span>ell</span></div>
   <div class="loading-track"><div class="loading-fill"></div></div>
+  <button id="kilkacellSkip" type="button">ПРОПУСТИТЬ ЗАГРУЗКУ</button>
 </div>
 <div id="landscapePrompt"><div class="prompt-card"><span class="rotate-icon">📱</span>ПОВЕРНИ УСТРОЙСТВО<br>ИГРА РАБОТАЕТ В ГОРИЗОНТАЛЬНОМ РЕЖИМЕ</div></div>
 <div id="app" class="game-app">
@@ -225,6 +234,7 @@ body{background:#080b20;background-image:radial-gradient(ellipse at 50% 38%,#273
 <section id="home" class="screen home-screen">
  <aside class="home-left">
   <button id="openFighterMenu" class="side-tile fighter-entry"><span>👤</span><b>БОЙЦЫ</b><small>Выбор бойца</small></button>
+  <button id="openOnlinePanel" class="side-tile"><span>🌐</span><b>ОНЛАЙН</b><small>Вход и друзья</small></button>
   <button id="shop" class="side-tile"><span>🛒</span><b>МАГАЗИН</b></button>
   <button id="upgrades" class="side-tile"><span>⚡</span><b>ПРОКАЧКА</b></button>
   <button id="road" class="side-tile"><span>🏆</span><b>ДОРОГА СЛАВЫ</b></button>
@@ -1208,17 +1218,74 @@ renderFighters();renderUpgradeFighters();renderUpgradeDetails();refresh();
   const gestureStart=()=>{startMusic();if(musicStarted){window.removeEventListener('pointerdown',gestureStart);window.removeEventListener('keydown',gestureStart)}};
   window.addEventListener('pointerdown',gestureStart,{once:true});
   window.addEventListener('keydown',gestureStart,{once:true});
+  let hiding=false;
   const hide=()=>{
-    setTimeout(()=>{
-      splash.classList.add('done');
-      if(music){music.pause();music.currentTime=0;}
-    },2100);
-    setTimeout(()=>splash.remove(),2600);
+    if(hiding)return;hiding=true;
+    splash.classList.add('done');
+    if(music){music.pause();music.currentTime=0;}
+    setTimeout(()=>splash.remove(),500);
   };
+  document.getElementById('kilkacellSkip')?.addEventListener('click',hide);
   if(document.readyState==='complete')hide();
   else window.addEventListener('load',hide,{once:true});
   // Fallback for browsers that delay the load event.
-  setTimeout(()=>{if(document.getElementById('kilkacellLoading'))hide()},3500);
+  setTimeout(()=>{if(document.getElementById('kilkacellLoading'))hide()},2200);
 })();
 </script>
+
+<div id="onlinePanel" class="hidden" role="dialog" aria-modal="true" aria-label="Онлайн и друзья">
+ <div class="online-card">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2>🌐 KILLKA BRAWL ONLINE</h2><button id="onlineClose" type="button">✕</button></div>
+  <div id="onlineAuthBox">
+   <p class="online-muted">Войди или создай аккаунт. Для регистрации понадобится электронная почта.</p>
+   <label class="online-muted" for="onlineEmail">Электронная почта</label><input id="onlineEmail" type="email" autocomplete="email" placeholder="name@example.com">
+   <label class="online-muted" for="onlinePassword">Пароль</label><input id="onlinePassword" type="password" autocomplete="current-password" placeholder="Не менее 6 символов">
+   <div class="online-actions"><button id="onlineSignIn" type="button">ВОЙТИ</button><button id="onlineSignUp" type="button">РЕГИСТРАЦИЯ</button></div>
+  </div>
+  <div id="onlineUserBox" class="hidden">
+   <div id="onlineWho" class="online-muted"></div><div class="online-actions"><button id="onlineSignOut" type="button">ВЫЙТИ ИЗ АККАУНТА</button></div>
+   <div class="online-section"><b>🔎 Найти игрока по нику</b><input id="onlineSearchName" type="text" maxlength="16" placeholder="Например Player_123"><button id="onlineSearchBtn" type="button">НАЙТИ</button><div id="onlineSearchResults" class="online-list"></div></div>
+   <div class="online-section"><b>📨 Входящие заявки</b><div id="onlineIncoming" class="online-list"></div></div>
+   <div class="online-section"><b>👥 Мои друзья</b><div id="onlineFriends" class="online-list"></div></div>
+  </div>
+  <div id="onlineMessage" class="online-status" aria-live="polite"></div>
+  <p class="online-muted">Сейчас доступны аккаунт и управление друзьями. Сетевой бой подключим отдельным следующим этапом.</p>
+ </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(()=>{
+ const URL='https://siggtxmxqlaeihpqpwmd.supabase.co';
+ const KEY='sb_publishable_oA7aBvX6njPczKVegR4Z_g_8VFu7oq6';
+ const $=id=>document.getElementById(id);
+ const panel=$('onlinePanel'); if(!panel||!window.supabase)return;
+ const db=window.supabase.createClient(URL,KEY);
+ let currentUser=null, realtime=null;
+ const msg=t=>{$('onlineMessage').textContent=t||''};
+ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ function open(){panel.classList.remove('hidden');msg('Проверяем вход…');refreshSession()}
+ function close(){panel.classList.add('hidden')}
+ async function refreshSession(){const {data,error}=await db.auth.getSession();if(error){msg(error.message);return}setUser(data.session?.user||null)}
+ function setUser(u){currentUser=u;$('onlineAuthBox').classList.toggle('hidden',!!u);$('onlineUserBox').classList.toggle('hidden',!u);if(u){$('onlineWho').textContent='Вошёл: '+(u.email||'игрок');loadSocial();subscribe()}else{if(realtime){db.removeChannel(realtime);realtime=null}$('onlineWho').textContent='';$('onlineIncoming').innerHTML='';$('onlineFriends').innerHTML='';$('onlineSearchResults').innerHTML='';}}
+ async function runAuth(kind){const email=$('onlineEmail').value.trim(),password=$('onlinePassword').value;if(!email||!password){msg('Введи почту и пароль.');return}msg('Подключаемся…');let r=kind==='up'?await db.auth.signUp({email,password}):await db.auth.signInWithPassword({email,password});if(r.error){msg(r.error.message);return}if(kind==='up'&&!r.data.session){msg('Аккаунт создан. Проверь почту и подтверди адрес, затем войди.');return}setUser(r.data.user);msg(kind==='up'?'Регистрация успешна!':'Ты вошёл в аккаунт!')}
+ async function loadSocial(){if(!currentUser)return;const uid=currentUser.id;
+  const {data:req,error}=await db.from('friend_requests').select('id,sender_id,receiver_id,status,created_at').eq('receiver_id',uid).eq('status','pending').order('created_at',{ascending:false});
+  if(error){msg('Не удалось загрузить заявки: '+error.message);return}
+  const senders=[...new Set((req||[]).map(x=>x.sender_id))];let profiles={};if(senders.length){const q=await db.from('profiles').select('id,username').in('id',senders);(q.data||[]).forEach(x=>profiles[x.id]=x.username)}
+  $('onlineIncoming').innerHTML=(req||[]).map(x=>`<div class="online-item"><span>${esc(profiles[x.sender_id]||'Игрок')}</span><button data-accept="${x.id}">ПРИНЯТЬ</button></div>`).join('')||'<div class="online-muted">Новых заявок нет.</div>';
+  $('onlineIncoming').querySelectorAll('[data-accept]').forEach(b=>b.onclick=()=>respond(b.dataset.accept,'accepted'));
+  const {data:friends,error:fe}=await db.from('friend_requests').select('sender_id,receiver_id').eq('status','accepted').or(`sender_id.eq.${uid},receiver_id.eq.${uid}`);
+  if(fe){msg('Не удалось загрузить друзей: '+fe.message);return}
+  const ids=[...new Set((friends||[]).map(x=>x.sender_id===uid?x.receiver_id:x.sender_id))];let names={};if(ids.length){const q=await db.from('profiles').select('id,username').in('id',ids);(q.data||[]).forEach(x=>names[x.id]=x.username)}
+  $('onlineFriends').innerHTML=ids.map(id=>`<div class="online-item"><span>🟢 ${esc(names[id]||'Игрок')}</span></div>`).join('')||'<div class="online-muted">Пока нет друзей.</div>';
+ }
+ async function respond(id,status){const {error}=await db.from('friend_requests').update({status}).eq('id',id);if(error){msg(error.message);return}msg(status==='accepted'?'Заявка принята!':'Заявка отклонена.');loadSocial()}
+ async function searchPlayers(){const term=$('onlineSearchName').value.trim();if(term.length<3){msg('Введи минимум 3 символа ника.');return}const {data,error}=await db.from('profiles').select('id,username').ilike('username',`%${term}%`).neq('id',currentUser.id).limit(10);if(error){msg(error.message);return} $('onlineSearchResults').innerHTML=(data||[]).map(x=>`<div class="online-item"><span>${esc(x.username)}</span><button data-add="${x.id}">ДОБАВИТЬ</button></div>`).join('')||'<div class="online-muted">Игроки не найдены.</div>';$('onlineSearchResults').querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>sendRequest(b.dataset.add));}
+ async function sendRequest(id){const {error}=await db.from('friend_requests').insert({sender_id:currentUser.id,receiver_id:id,status:'pending'});if(error){msg(error.code==='23505'?'Заявка уже отправлена.':error.message);return}msg('Заявка в друзья отправлена!')}
+ function subscribe(){if(realtime)db.removeChannel(realtime);realtime=db.channel('friend-requests-'+currentUser.id).on('postgres_changes',{event:'*',schema:'public',table:'friend_requests',filter:`receiver_id=eq.${currentUser.id}`},()=>loadSocial()).subscribe();}
+ $('openOnlinePanel')?.addEventListener('click',open);$('onlineClose').onclick=close;$('onlineSignIn').onclick=()=>runAuth('in');$('onlineSignUp').onclick=()=>runAuth('up');$('onlineSignOut').onclick=async()=>{await db.auth.signOut();setUser(null);msg('Ты вышел из аккаунта.')};$('onlineSearchBtn').onclick=searchPlayers;
+ db.auth.onAuthStateChange((_event,session)=>{setUser(session?.user||null)});
+})();
+</script>
+
 </body></html>
