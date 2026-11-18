@@ -75,7 +75,7 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:1/1;background:#579b55;
 #landscapePrompt .prompt-card{max-width:340px;background:#20294b;border:2px solid #6574ae;border-radius:18px;padding:25px;font-weight:900}
 #landscapePrompt .rotate-icon{font-size:58px;display:block;margin-bottom:12px;animation:rotateHint 1.8s ease-in-out infinite}
 @keyframes rotateHint{0%,100%{transform:rotate(0)}50%{transform:rotate(90deg)}}
-@media (orientation:portrait) and (max-width:700px) and (pointer:coarse){#landscapePrompt{display:flex}}
+@media (orientation:portrait) and (max-width:700px) and (pointer:coarse){#landscapePrompt{display:none!important}}
 
 /* KILLKA BRAWL: immersive full-screen battle controls */
 @media (orientation:landscape) and (pointer:coarse){
@@ -169,6 +169,48 @@ body{background:#080b20;background-image:radial-gradient(ellipse at 50% 38%,#273
 @media(max-width:700px){#app.game-app{padding:5px;gap:5px}.game-app>.top{height:44px;padding:4px 7px}.top-brand{font-size:16px}.top-brand small{display:none}.top-resources{gap:4px}.resource{min-width:48px;padding:4px 5px;font-size:12px}.resource b{font-size:12px}.music-mini{padding:3px 7px}.home-screen{min-height:calc(100vh - 58px);grid-template-columns:72px minmax(0,1fr) 72px;grid-template-rows:minmax(160px,1fr) auto;gap:4px}.home-left,.home-right{gap:6px;padding:3px 1px}.side-tile{min-height:55px;padding:4px 2px}.side-tile span{font-size:20px}.side-tile b{font-size:8px}.side-tile small{display:none}.side-note{font-size:8px;padding:4px 2px}.side-note>span{font-size:16px}.home-stage{min-height:160px}.stage-rank{top:4px;font-size:12px;padding:3px 7px}.stage-rank small{font-size:7px}.stage-stars{top:12%;font-size:16px}.hero-platform{height:145px;width:70%;margin-top:22px}.hero-fighter-art{font-size:clamp(75px,20vw,125px)}.hero-caption{bottom:-1px;min-width:105px;padding:3px 9px}.hero-caption b{font-size:12px}.hero-caption span{font-size:7px}.stage-tag{font-size:13px;margin-top:3px}.stage-subtitle{font-size:8px}.home-bottom{grid-template-columns:90px minmax(0,1fr) 100px;gap:4px;padding:4px 2px}.quest-tile{grid-template-columns:25px 1fr;padding:4px 3px}.quest-tile span{font-size:19px}.quest-tile b{font-size:8px}.quest-tile small{font-size:7px}.mini-rank{padding:4px;font-size:8px}.mini-rank span{font-size:7px}.bottom-mode #modeChoices{gap:2px}.bottom-mode .mode{min-height:55px;padding:3px 1px}.bottom-mode .mode span{font-size:15px}.bottom-mode .mode b{font-size:7px}.bottom-mode .mode small{font-size:6px}.mode-heading{font-size:8px}.play-big{height:60px;font-size:17px;padding:4px;border-width:2px;border-bottom-width:5px}.play-big span{font-size:15px;margin-left:1px}}
 @media(max-height:430px) and (orientation:landscape){.home-screen{min-height:calc(100vh - 60px);grid-template-rows:minmax(145px,1fr) auto}.hero-platform{height:130px}.home-bottom{padding-top:3px}.bottom-mode .mode{min-height:48px}.play-big{height:54px}.home-left,.home-right{justify-content:space-evenly}.side-tile{min-height:48px}}
 
+
+/* Portrait-first layout for phones */
+@media (orientation:portrait) and (max-width:700px) and (pointer:coarse){
+  html,body{min-height:100%;overflow-x:hidden}
+  #app.game-app{width:100%;max-width:560px;min-height:100dvh;padding:calc(5px + env(safe-area-inset-top)) 7px calc(8px + env(safe-area-inset-bottom));gap:7px}
+  .game-app>.top{height:auto;min-height:48px;flex-wrap:wrap;gap:5px;padding:5px 7px}
+  .top-brand{font-size:16px;white-space:nowrap}
+  .top-resources{flex:1;justify-content:flex-end;gap:3px;flex-wrap:wrap}
+  .resource{min-width:0;padding:4px 5px;font-size:11px}
+  .resource b{font-size:11px}
+  .home-screen{min-height:calc(100dvh - 70px);height:auto;overflow:visible;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(245px,36dvh) auto;gap:7px;padding:7px 5px}
+  .home-left,.home-right{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:0;justify-content:stretch}
+  .home-left{grid-row:1}.home-stage{grid-row:2;min-height:245px}
+  .home-right{grid-row:3}
+  .side-tile{min-height:51px;padding:4px 3px;gap:1px}
+  .side-tile span{font-size:20px}.side-tile b{font-size:9px}.side-tile small{display:none}
+  .side-note{margin:0;padding:5px;font-size:8px}.side-note>span{font-size:16px}
+  .stage-rank{top:5px;font-size:12px;padding:3px 7px}
+  .stage-stars{top:12%;font-size:18px}
+  .hero-platform{height:clamp(145px,23dvh,205px);width:70%;margin-top:22px}
+  .hero-fighter-art{font-size:clamp(88px,25vw,140px)}
+  .hero-caption{bottom:0;min-width:120px;padding:4px 10px}
+  .hero-caption b{font-size:13px}.hero-caption span{font-size:8px}
+  .stage-tag{font-size:14px}.stage-subtitle{font-size:9px}
+  .home-bottom{grid-column:1;grid-row:4;grid-template-columns:minmax(0,1fr);gap:7px;padding:7px 3px}
+  .bottom-quests{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+  .quest-tile{min-height:48px;grid-template-columns:30px 1fr;padding:5px}
+  .quest-tile span{font-size:20px}.quest-tile b{font-size:9px}.quest-tile small{font-size:8px}
+  .mini-rank{font-size:9px}
+  .bottom-mode #modeChoices{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+  .bottom-mode .mode{min-height:55px;padding:5px}
+  .bottom-mode .mode span{font-size:19px}.bottom-mode .mode b{font-size:9px}.bottom-mode .mode small{font-size:8px}
+  .mode-heading{font-size:10px}
+  .play-big{width:100%;height:62px;font-size:21px}
+  #arenaScreen:not(.hidden){min-height:0;overflow:visible;padding-bottom:12px}
+  #arenaScreen>#field{width:min(100%,calc(100vw - 24px));height:auto;max-height:none;aspect-ratio:1/1;align-self:center}
+  #arenaScreen>.controls{position:relative;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 5px}
+  #arenaScreen .stick{width:100px;height:100px}
+  #arenaScreen .knob{left:29px;top:29px}
+  #arenaScreen>.super-aim-wrap.ready{display:flex}
+  #landscapePrompt{display:none!important}
+}
 </style>
 </head>
 <body>
@@ -428,10 +470,7 @@ $('profileNameInput').addEventListener('input',()=>{const input=$('profileNameIn
 $('saveProfileName').onclick=()=>{const name=$('profileNameInput').value.replace(/[^\p{L}]/gu,'').slice(0,10);if(!name){$('profileNameStatus').textContent='Введи имя из букв.';return}save.profileName=name;$('profileNameStatus').textContent='Имя профиля сохранено!';persist();renderProfile()};
 $('redeemCodeButton').onclick=()=>{const code=$('redeemCodeInput').value.trim().toUpperCase();if(!code){$('redeemCodeStatus').textContent='Сначала введи код.';return}if(code==='ADMINTXT'){if(save.isAdmin){$('redeemCodeStatus').textContent='Статус ADMIN уже активирован!';return}save.isAdmin=true;$('redeemCodeStatus').textContent='✅ Код активирован! Твоё имя теперь зелёное.';persist();renderProfile();return}if(code==='KILLKA'){save.usedPromoCodes=Array.isArray(save.usedPromoCodes)?save.usedPromoCodes:[];if(save.usedPromoCodes.includes('KILLKA')){$('redeemCodeStatus').textContent='❌ Этот код уже использован.';return}save.usedPromoCodes.push('KILLKA');save.profileName='killka';$('redeemCodeStatus').textContent='✅ Код активирован! Имя изменено на killka.'+(save.isAdmin?' Статус ADMIN сохранён.':'');persist();renderProfile();return}if(code==='5000MONET'){save.usedPromoCodes=Array.isArray(save.usedPromoCodes)?save.usedPromoCodes:[];if(save.usedPromoCodes.includes('5000MONET')){$('redeemCodeStatus').textContent='❌ Этот код уже использован.';return}save.usedPromoCodes.push('5000MONET');save.coins=(Number(save.coins)||0)+5000;$('redeemCodeStatus').textContent='✅ Код активирован! Начислено 5000 монет.';persist();return}$('redeemCodeStatus').textContent='❌ Такого кода нет.'};
 $('redeemCodeInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('redeemCodeButton').click()});
-let killkaOrientationRequested=false;
-function requestLandscape(){if(killkaOrientationRequested)return;killkaOrientationRequested=true;try{if(screen.orientation&&screen.orientation.lock){screen.orientation.lock('landscape').catch(()=>{});}}catch(e){}}
-document.addEventListener('pointerdown',requestLandscape,{once:true,passive:true});
-document.addEventListener('click',requestLandscape,{once:true});
+// Вертикальная ориентация: не блокируем поворот устройства.
 function show(id){['home','fighterMenuScreen','profileScreen','modeRevealScreen','fighterSelectScreen','countdownScreen','arenaScreen','settingsScreen','shopScreen','upgradeScreen','roadScreen','boxScreen','endScreen'].forEach(x=>$(x).classList.add('hidden'));$(id).classList.remove('hidden');if(window.syncKillkaMenuMusic)window.syncKillkaMenuMusic(id)}
 let computerControlsEnabled=localStorage.getItem('kbComputerControls')==='true';
 function refreshComputerControlsSetting(){const input=$('computerControlsToggle');if(input)input.checked=computerControlsEnabled;$('computerControlsStatus').textContent=computerControlsEnabled?'Управление с клавиатуры и мыши включено.':'Управление с клавиатуры и мыши выключено.';}
