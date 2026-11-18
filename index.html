@@ -1241,6 +1241,8 @@ renderFighters();renderUpgradeFighters();renderUpgradeDetails();refresh();
    <label class="online-muted" for="onlineEmail">Электронная почта</label><input id="onlineEmail" type="text" inputmode="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="name@example.com">
    <label class="online-muted" for="onlinePassword">Пароль</label><input id="onlinePassword" type="password" autocomplete="current-password" placeholder="Не менее 6 символов">
    <div class="online-actions"><button id="onlineSignIn" type="button">ВОЙТИ</button><button id="onlineSignUp" type="button">РЕГИСТРАЦИЯ</button></div>
+   <div style="text-align:center;margin:10px 0;color:#c4cbed;font-size:12px">ИЛИ</div>
+   <button id="onlineGoogle" type="button" style="width:100%;padding:12px;border-radius:9px;background:#fff;color:#222;font-weight:700">🌐 ВОЙТИ ЧЕРЕЗ GOOGLE</button>
   </div>
   <div id="onlineUserBox" class="hidden">
    <div id="onlineWho" class="online-muted"></div><div class="online-actions"><button id="onlineSignOut" type="button">ВЫЙТИ ИЗ АККАУНТА</button></div>
@@ -1283,7 +1285,7 @@ renderFighters();renderUpgradeFighters();renderUpgradeDetails();refresh();
  async function searchPlayers(){const term=$('onlineSearchName').value.trim();if(term.length<3){msg('Введи минимум 3 символа ника.');return}const {data,error}=await db.from('profiles').select('id,username').ilike('username',`%${term}%`).neq('id',currentUser.id).limit(10);if(error){msg(error.message);return} $('onlineSearchResults').innerHTML=(data||[]).map(x=>`<div class="online-item"><span>${esc(x.username)}</span><button data-add="${x.id}">ДОБАВИТЬ</button></div>`).join('')||'<div class="online-muted">Игроки не найдены.</div>';$('onlineSearchResults').querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>sendRequest(b.dataset.add));}
  async function sendRequest(id){const {error}=await db.from('friend_requests').insert({sender_id:currentUser.id,receiver_id:id,status:'pending'});if(error){msg(error.code==='23505'?'Заявка уже отправлена.':error.message);return}msg('Заявка в друзья отправлена!')}
  function subscribe(){if(realtime)db.removeChannel(realtime);realtime=db.channel('friend-requests-'+currentUser.id).on('postgres_changes',{event:'*',schema:'public',table:'friend_requests',filter:`receiver_id=eq.${currentUser.id}`},()=>loadSocial()).subscribe();}
- $('openOnlinePanel')?.addEventListener('click',open);$('onlineClose').onclick=close;$('onlineSignIn').onclick=()=>runAuth('in');$('onlineSignUp').onclick=()=>runAuth('up');$('onlineSignOut').onclick=async()=>{await db.auth.signOut();setUser(null);msg('Ты вышел из аккаунта.')};$('onlineSearchBtn').onclick=searchPlayers;
+ $('openOnlinePanel')?.addEventListener('click',open);$('onlineClose').onclick=close;$('onlineSignIn').onclick=()=>runAuth('in');$('onlineSignUp').onclick=()=>runAuth('up');$('onlineGoogle').onclick=async()=>{msg('Открываем Google…');const {error}=await db.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.href}});if(error)msg('Ошибка Google: '+error.message)};$('onlineSignOut').onclick=async()=>{await db.auth.signOut();setUser(null);msg('Ты вышел из аккаунта.')};$('onlineSearchBtn').onclick=searchPlayers;
  db.auth.onAuthStateChange((_event,session)=>{setUser(session?.user||null)});
 })();
 </script>
