@@ -486,7 +486,7 @@ $('saveProfileName').onclick=()=>{const name=$('profileNameInput').value.replace
 $('redeemCodeButton').onclick=()=>{const code=$('redeemCodeInput').value.trim().toUpperCase();if(!code){$('redeemCodeStatus').textContent='Сначала введи код.';return}if(code==='ADMINTXT'){if(save.isAdmin){$('redeemCodeStatus').textContent='Статус ADMIN уже активирован!';return}save.isAdmin=true;$('redeemCodeStatus').textContent='✅ Код активирован! Твоё имя теперь зелёное.';persist();renderProfile();return}if(code==='KILLKA'){save.usedPromoCodes=Array.isArray(save.usedPromoCodes)?save.usedPromoCodes:[];if(save.usedPromoCodes.includes('KILLKA')){$('redeemCodeStatus').textContent='❌ Этот код уже использован.';return}save.usedPromoCodes.push('KILLKA');save.profileName='killka';$('redeemCodeStatus').textContent='✅ Код активирован! Имя изменено на killka.'+(save.isAdmin?' Статус ADMIN сохранён.':'');persist();renderProfile();return}if(code==='5000MONET'){save.usedPromoCodes=Array.isArray(save.usedPromoCodes)?save.usedPromoCodes:[];if(save.usedPromoCodes.includes('5000MONET')){$('redeemCodeStatus').textContent='❌ Этот код уже использован.';return}save.usedPromoCodes.push('5000MONET');save.coins=(Number(save.coins)||0)+5000;$('redeemCodeStatus').textContent='✅ Код активирован! Начислено 5000 монет.';persist();return}$('redeemCodeStatus').textContent='❌ Такого кода нет.'};
 $('redeemCodeInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('redeemCodeButton').click()});
 // Вертикальная ориентация: не блокируем поворот устройства.
-function show(id){['home','fighterMenuScreen','profileScreen','modeRevealScreen','fighterSelectScreen','countdownScreen','arenaScreen','settingsScreen','shopScreen','upgradeScreen','roadScreen','boxScreen','endScreen','leaderboardScreen'].forEach(x=>$(x)?.classList.add('hidden'));$(id)?.classList.remove('hidden');if(window.syncKillkaMenuMusic)window.syncKillkaMenuMusic(id)}
+function show(id){['home','fighterMenuScreen','profileScreen','modeRevealScreen','fighterSelectScreen','countdownScreen','arenaScreen','settingsScreen','shopScreen','upgradeScreen','roadScreen','boxScreen','endScreen'].forEach(x=>$(x).classList.add('hidden'));$(id).classList.remove('hidden');if(window.syncKillkaMenuMusic)window.syncKillkaMenuMusic(id)}
 let computerControlsEnabled=localStorage.getItem('kbComputerControls')==='true';
 function refreshComputerControlsSetting(){const input=$('computerControlsToggle');if(input)input.checked=computerControlsEnabled;$('computerControlsStatus').textContent=computerControlsEnabled?'Управление с клавиатуры и мыши включено.':'Управление с клавиатуры и мыши выключено.';}
 
@@ -1037,9 +1037,6 @@ function enableLayoutPreviewDrag(){if(enableLayoutPreviewDrag.ready)return;enabl
 enableLayoutPreviewDrag();
 const pressedKeys=new Set();
 function updateKeyboardMove(){
-  // Не перезаписываем движение виртуального джойстика на телефонах.
-  // Эта функция вызывается каждый кадр игрового цикла.
-  if(!computerControlsEnabled)return;
   const left=pressedKeys.has('a')||pressedKeys.has('arrowleft');
   const right=pressedKeys.has('d')||pressedKeys.has('arrowright');
   const up=pressedKeys.has('w')||pressedKeys.has('arrowup');
