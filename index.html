@@ -1037,6 +1037,9 @@ function enableLayoutPreviewDrag(){if(enableLayoutPreviewDrag.ready)return;enabl
 enableLayoutPreviewDrag();
 const pressedKeys=new Set();
 function updateKeyboardMove(){
+  // Не перезаписываем движение виртуального джойстика на телефонах.
+  // Эта функция вызывается каждый кадр игрового цикла.
+  if(!computerControlsEnabled)return;
   const left=pressedKeys.has('a')||pressedKeys.has('arrowleft');
   const right=pressedKeys.has('d')||pressedKeys.has('arrowright');
   const up=pressedKeys.has('w')||pressedKeys.has('arrowup');
